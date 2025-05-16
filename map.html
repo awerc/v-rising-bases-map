@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>V: RISING — Карта</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css " />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link href="https://fonts.googleapis.com/css2?family=Shantell+Sans:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
@@ -21,7 +21,8 @@
     }
 
     * {
-      font-family: Shantell Sans;
+      font-family: 'Shantell Sans', sans-serif;
+      box-sizing: border-box;
     }
 
     .leaflet-container {
@@ -52,7 +53,7 @@
     }
 
     #playerNamesInput {
-      width: calc(100% - 20px);
+      width: 100%;
       height: 80px;
       background: #2a2a2a;
       color: #fff;
@@ -60,32 +61,26 @@
       padding: 10px;
       resize: none;
     }
-
     .marker-item {
       padding: 10px;
       border-bottom: 1px solid #444;
       cursor: pointer;
     }
-
     .marker-item:hover {
       background-color: #2c2c2c;
     }
-
     .marker-title {
       font-weight: bold;
       color: #ffcccc;
     }
-
     .marker-level {
       font-size: 14px;
       color: #aaa;
     }
-
     .marker-players span.matched {
       color: red;
       font-weight: bold;
     }
-
     #modal {
       position: fixed;
       top: 0;
@@ -98,14 +93,12 @@
       align-items: center;
       z-index: 9999;
     }
-
     #modal form {
       background: #2a2a2a;
       padding: 20px;
       border-radius: 6px;
       width: 300px;
     }
-
     #modal input,
     #modal textarea,
     #modal select {
@@ -116,7 +109,6 @@
       border: 1px solid #444;
       padding: 5px;
     }
-
     button.close-modal {
       float: right;
       background: #d35252;
@@ -125,14 +117,11 @@
       padding: 4px 8px;
       cursor: pointer;
       font-size: 18px;
-      font-family: sans-serif;
     }
-
     label.full-width {
       display: block;
       margin-top: 10px;
     }
-
     .leaflet-popup-content-wrapper {
       background: rgba(30, 30, 30, 0.95);
       color: #fff;
@@ -140,15 +129,12 @@
       border-radius: 6px;
       font-family: 'Shantell Sans', cursive;
     }
-
     .leaflet-popup-tip {
       background: rgba(30, 30, 30, 0.95);
     }
-
     .leaflet-popup-content strong {
       color: #ffcccc;
     }
-
     .leaflet-popup-content button {
       margin-top: 5px;
       background: #d35252;
@@ -159,41 +145,50 @@
       cursor: pointer;
       margin-right: 5px;
     }
-
     .leaflet-popup-content button:nth-child(2) {
       background: #52d37b;
     }
+    .icon-level-0 { opacity: 1; }
+    .icon-level-1 { opacity: 0.8; }
+    .icon-level-2 { opacity: 0.6; }
+    .icon-level-3 { opacity: 0.4; }
+    .icon-level-4 { opacity: 0.2; }
 
-    .icon-level-0 {
-      opacity: 1;
+    .autocomplete-items {
+      position: absolute;
+      border: 1px solid #555;
+      border-top: none;
+      z-index: 9999;
+      background: rgba(30, 30, 30, 0.95);
+      max-height: 200px;
+      overflow-y: auto;
+      width: 260px;
+      font-family: sans-serif;
+      font-size: 14px;
     }
-    .icon-level-1 {
-      opacity: 0.8;
+    .autocomplete-items div {
+      padding: 8px;
+      cursor: pointer;
+      border-bottom: 1px solid #555;
     }
-    .icon-level-2 {
-      opacity: 0.6;
-    }
-    .icon-level-3 {
-      opacity: 0.4;
-    }
-    .icon-level-4 {
-      opacity: 0.2;
-    }
-
-    .tooltip-buttons {
-      margin-top: 5px;
+    .autocomplete-items div:hover {
+      background-color: rgba(43, 43, 43, 0.95);
     }
   </style>
 </head>
 <body>
+
 <div id="map"></div>
 
 <aside id="markerList">
   <h3>Players list</h3>
-  <label class="full-width">
-    <textarea id="playerNamesInput" placeholder="Player1, Player2..." oninput="autoApplyFilter()"></textarea>
+  <label class="full-width">Список игроков (через запятую):
+    <textarea id="playerNamesInput" oninput="autoCompletePlayers(this)" placeholder="Player1, Player2..."></textarea>
+    <div id="autocomplete-list" class="autocomplete-items"></div>
   </label>
+
   <hr />
+
   <h3>Markers</h3>
   <div id="markersContainer"></div>
 </aside>
@@ -203,8 +198,7 @@
   <form id="markerForm">
     <button type="button" class="close-modal">&times;</button>
     <h4>Add / Edit</h4>
-    <label
-    >Level:
+    <label>Level:
       <select name="level">
         <option value="I">I</option>
         <option value="II">II</option>
@@ -213,17 +207,15 @@
         <option value="V">V</option>
       </select>
     </label>
-    <label
-    >Title:
+    <label>Title:
       <input type="text" name="title" />
     </label>
-    <label
-    >Description:
+    <label>Description:
       <textarea name="description"></textarea>
     </label>
-    <label
-    >Players:
-      <input type="text" name="players" />
+    <label>Players:
+      <input type="text" id="modal-players-input" name="players" oninput="autoCompletePlayers(this)" />
+      <div id="autocomplete-modal-list" class="autocomplete-items"></div>
     </label>
     <button type="submit">Save</button>
   </form>
@@ -231,12 +223,8 @@
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js "></script>
 <script>
-  const imageBounds = [
-    [0, 0],
-    [6080, 6080],
-  ];
+  const imageBounds = [[0, 0], [6080, 6080]];
   const imageUrl = 'map.webp';
-
   const GIST_ID = '5c5b1173184b3389531fe6235001b800';
   const GITHUB_TOKEN = localStorage.getItem('gh_token');
   const FILE_NAME = 'rising.json';
@@ -244,6 +232,7 @@
   let currentMarker = null;
   let currentLatLng = null;
   let activePlayers = [];
+  let allPlayers = [];
 
   const map = L.map('map', {
     crs: L.CRS.Simple,
@@ -251,11 +240,8 @@
     maxZoom: 2,
     zoomSnap: 0,
     maxBoundsViscosity: 1,
-    maxBounds: [
-      [0, 0],
-      [8080, 8080],
-    ],
-    wheelPxPerZoomLevel: 20,
+    maxBounds: [[0, 0], [6080, 8080]],
+    wheelPxPerZoomLevel: 20
   });
 
   L.imageOverlay(imageUrl, imageBounds).addTo(map);
@@ -269,7 +255,7 @@
 
   function getIcon(level, matches = 0) {
     return new L.Icon({
-      iconUrl: ['V', 'IV', 'III', 'II', 'I'].includes(level?.toUpperCase())
+      iconUrl: ['V','IV','III','II','I'].includes(level?.toUpperCase())
               ? `${level.toUpperCase()}.svg`
               : 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
       shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
@@ -277,7 +263,7 @@
       iconSize: [25, 41],
       iconAnchor: [12, 41],
       popupAnchor: [1, -34],
-      shadowSize: [41, 41],
+      shadowSize: [41, 41]
     });
   }
 
@@ -288,21 +274,21 @@
     markerForm.level.value = markerData?.level || 'I';
     markerForm.title.value = markerData?.title || '';
     markerForm.description.value = markerData?.description || '';
-    markerForm.players.value = markerData?.players?.join(', ') || '';
+    document.getElementById('modal-players-input').value = markerData?.players?.join(', ') || '';
 
     modal.style.display = 'flex';
     setTimeout(() => map.invalidateSize(), 200);
   }
 
-  markerForm.addEventListener('submit', function (e) {
+  markerForm.addEventListener('submit', function(e) {
     e.preventDefault();
     const data = {
       level: this.level.value,
       title: this.title.value.trim(),
       description: this.description.value.trim(),
-      players: parsePlayers(this.players.value),
+      players: parsePlayers(document.getElementById('modal-players-input').value),
       lat: currentLatLng.lat,
-      lng: currentLatLng.lng,
+      lng: currentLatLng.lng
     };
 
     if (currentMarker) {
@@ -322,34 +308,24 @@
   });
 
   function parsePlayers(str) {
-    return str
-            .split(',')
+    return str.split(',')
             .map(p => p.trim())
             .filter(Boolean);
   }
 
   function addMarker(data) {
     if (typeof data.lat !== 'number' || typeof data.lng !== 'number') {
-      console.error('Некорректные координаты метки', data);
+      console.error("Некорректные координаты метки", data);
       return;
     }
 
     const marker = L.marker([data.lat, data.lng], {
       icon: getIcon(data.level),
       draggable: true,
-      data: data,
+      data: data
     }).addTo(map);
 
-    const popupContent = `
-      <div><strong>${data.title}</strong></div>
-      <div>${data.description}</div>
-      Players: ${data.players.join(', ') || '-'}<br>
-      <div class="tooltip-buttons">
-        <button onclick="removeMarker(this, ${data.lat}, ${data.lng})">Delete</button>
-        <button onclick="editMarker(${data.lat}, ${data.lng})">Edit</button>
-      </div>
-    `;
-    marker.bindPopup(popupContent);
+    createPopup(marker, data);
 
     marker.on('dragend', () => {
       const latlng = marker.getLatLng();
@@ -369,22 +345,24 @@
       description: newData.description,
       players: newData.players,
       lat: marker.getLatLng().lat,
-      lng: marker.getLatLng().lng,
+      lng: marker.getLatLng().lng
     };
-
-    const popupContent = `
-      <strong>${newData.title}</strong><br>
-      ${newData.description}<br>
-      Players: ${newData.players.join(', ') || '-'}<br>
-      <div class="tooltip-buttons">
-        <button onclick="removeMarker(this, ${newData.lat}, ${newData.lng})">Delete</button>
-        <button onclick="editMarker(${newData.lat}, ${newData.lng})">Edit</button>
-      </div>
-    `;
-    marker.setPopupContent(popupContent);
+    createPopup(marker, newData);
+    saveMarkersToGist();
   }
 
-  window.editMarker = function (lat, lng) {
+  function createPopup(marker, data) {
+    const popupContent = `
+      <div><strong>${data.title}</strong></div>
+      <div>${data.description}</div>
+      Players: ${data.players.join(', ') || '-'}<br>
+      <button onclick="editMarker(${data.lat}, ${data.lng})">Edit</button>
+      <button onclick="removeMarker(this, ${data.lat}, ${data.lng})">Delete</button>
+    `;
+    marker.bindPopup(popupContent);
+  }
+
+  window.editMarker = function(lat, lng) {
     map.eachLayer(layer => {
       if (layer instanceof L.Marker) {
         const ll = layer.getLatLng();
@@ -395,27 +373,24 @@
             level: data.level,
             title: data.title,
             description: data.description,
-            players: data.players,
+            players: data.players
           });
         }
       }
     });
   };
 
-  window.removeMarker = function (btn, lat, lng) {
-    let removed = false;
+  window.removeMarker = function(btn, lat, lng) {
     map.eachLayer(layer => {
       if (layer instanceof L.Marker) {
         const ll = layer.getLatLng();
         if (ll.lat === lat && ll.lng === lng) {
           map.removeLayer(layer);
-          removed = true;
         }
       }
     });
-    if (removed) {
-      saveMarkersToGist();
-    }
+    saveMarkersToGist();
+
     const parent = btn.closest('.marker-item');
     if (parent) parent.remove();
   };
@@ -439,16 +414,12 @@
       const div = document.createElement('div');
       div.className = 'marker-item';
       div.innerHTML = `
-        <div class="marker-level">[ ${m.level} ] <span class="marker-title">${m.title ?? ''}</span></div>
+        <div class="marker-level">[ ${m.level} ] <span class="marker-title">${m.title}</span></div>
         <div class="marker-players">Players:
-          ${
-              m.players
-                      .map(p => {
-                        const isMatch = activePlayers.map(x => x.toLowerCase()).includes(p.toLowerCase());
-                        return isMatch ? `<span class="matched">${p}</span>` : p;
-                      })
-                      .join(', ') || '-'
-      }
+          ${m.players.map(p => {
+        const isMatch = activePlayers.includes(p);
+        return isMatch ? `<span class="matched">${p}</span>` : p;
+      }).join(', ') || '-'}
         </div>`;
       div.onclick = () => {
         map.flyTo([m.lat, m.lng], -1);
@@ -467,18 +438,20 @@
 
   async function saveMarkersToGist() {
     const markers = getMarkersFromMap();
-    localStorage.setItem('mapMarkers', JSON.stringify(markers));
 
-    if (!GITHUB_TOKEN) return;
+    if (!GITHUB_TOKEN) {
+      localStorage.setItem('mapMarkers', JSON.stringify(markers));
+      return;
+    }
 
     const payload = {
       description: 'V: RISING Map Markers',
       public: false,
-      files: {},
+      files: {}
     };
 
     payload.files[FILE_NAME] = {
-      content: JSON.stringify(markers, null, 2),
+      content: JSON.stringify(markers, null, 2)
     };
 
     try {
@@ -486,9 +459,9 @@
         method: 'PATCH',
         headers: {
           Authorization: `token ${GITHUB_TOKEN}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload)
       });
 
       if (res.status === 200) {
@@ -523,8 +496,6 @@
       localMarkers.forEach(m => {
         if (typeof m.lat === 'number' && typeof m.lng === 'number') {
           addMarker(m);
-        } else {
-          console.warn('Пропущена метка с некорректными координатами:', m);
         }
       });
     }
@@ -538,25 +509,69 @@
 
   function applyPlayerFilter() {
     activePlayers = parsePlayers(document.getElementById('playerNamesInput').value);
-
     map.eachLayer(layer => {
       if (layer instanceof L.Marker) {
         const markerData = layer.options.data;
-        const matches = markerData.players.filter(p =>
-                activePlayers.map(x => x.toLowerCase()).includes(p.toLowerCase()),
-        );
+        const matches = markerData.players.filter(p => activePlayers.includes(p));
         layer.setIcon(getIcon(markerData.level, matches.length));
       }
     });
-
     renderMarkerList();
   }
 
   map.on('click', e => showModal(e.latlng));
   window.addEventListener('load', () => {
     loadMarkersFromGist();
+    loadPlayerList();
     window.addEventListener('resize', () => map.invalidateSize());
   });
+
+  async function loadPlayerList() {
+    try {
+      allPlayers = (await Promise.all([
+        fetch('https://api.battlemetrics.com/servers/33218693/relationships/leaderboards/time?page[size]=100&page[offset]=0&page[rel]=prev&filter[period]=2025-04-16T00:00:00.000Z:2025-05-16T00:00:00.000Z').then(r => r.json().then(j => j.data.map(p => p.attributes.name))),
+        fetch('https://api.battlemetrics.com/servers/33218693/relationships/leaderboards/time?page[size]=100&page[offset]=100&page[rel]=prev&filter[period]=2025-04-16T00:00:00.000Z:2025-05-16T00:00:00.000Z').then(r => r.json().then(j => j.data.map(p => p.attributes.name)))
+      ])).flat()
+    } catch (e) {
+      console.error('Ошибка загрузки списка игроков', e);
+    }
+  }
+
+  function autoCompletePlayers(inputElement) {
+    const val = inputElement.value.trim();
+    const container = inputElement.nextElementSibling;
+    container.innerHTML = "";
+
+    if (!val) return;
+
+    const currentList = val.split(',').map(s => s.trim());
+    const last = currentList.pop().toLowerCase();
+
+    const matches = allPlayers.filter(p =>
+            p.toLowerCase().startsWith(last) && !currentList.map(x => x.toLowerCase()).includes(p.toLowerCase())
+    );
+
+    matches.forEach(match => {
+      const item = document.createElement("div");
+      item.textContent = match;
+      item.onclick = () => {
+        const newValue = [...currentList, match].join(", ");
+        inputElement.value = newValue + ", ";
+        inputElement.focus();
+        container.innerHTML = "";
+        applyPlayerFilter();
+      };
+      container.appendChild(item);
+    });
+  }
+
+  document.addEventListener("click", function(e) {
+    const list = document.getElementById("autocomplete-list");
+    const modalList = document.getElementById("autocomplete-modal-list");
+    if (!e.target.closest('#playerNamesInput')) list.innerHTML = "";
+    if (!e.target.closest('#modal-players-input')) modalList.innerHTML = "";
+  });
+
 </script>
 </body>
 </html>
