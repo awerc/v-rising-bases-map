@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <title>V: RISING — Карта</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link href="https://fonts.googleapis.com/css2?family=Shantell+Sans:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
@@ -21,9 +20,6 @@
     }
     * {
       box-sizing: border-box;
-    }
-    .leaflet-container {
-      background-color: #1e1e1e;
     }
     #map {
       position: absolute;
@@ -60,9 +56,6 @@
       border-bottom: 1px solid #444;
       cursor: pointer;
     }
-    .marker-item:hover {
-      background-color: #2c2c2c;
-    }
     .marker-title {
       font-weight: bold;
       color: #ffcccc;
@@ -76,11 +69,12 @@
       flex-direction: column;
     }
     .hours {
+      user-select: none;
       font-family: monospace;
       color: #ccc;
     }
     .marker-players span.matched {
-      color: red;
+      color: #d35252;
       font-weight: bold;
     }
     #modal {
@@ -120,24 +114,22 @@
       cursor: pointer;
       font-size: 18px;
     }
-    label.full-width {
-      display: block;
-      margin-top: 10px;
+
+    .ol-overlay-container  {
+      pointer-events: none !important;
     }
-    .leaflet-popup-content-wrapper {
+    #popup {
       background: rgba(30, 30, 30, 0.95);
       color: #fff;
       padding: 10px;
       border-radius: 6px;
       font-family: 'Shantell Sans', cursive;
     }
-    .leaflet-popup-tip {
-      background: rgba(30, 30, 30, 0.95);
-    }
-    .leaflet-popup-content strong {
+    #popup strong {
       color: #ffcccc;
     }
-    .leaflet-popup-content button {
+    #popup button {
+      pointer-events: all;
       margin-top: 5px;
       background: #d35252;
       color: white;
@@ -147,7 +139,7 @@
       cursor: pointer;
       margin-right: 5px;
     }
-    .leaflet-popup-content button:nth-child(2) {
+    #popup button:nth-child(2) {
       background: #52d37b;
     }
     .icon-level-0 { opacity: 1; }
@@ -180,7 +172,6 @@
 <body>
 <div id="map"></div>
 <aside id="markerList">
-
   <label class="full-width"><h3>Players list</h3>
     <textarea id="playerNamesInput" oninput="autoCompletePlayers(this)" placeholder="Player1, Player2..."></textarea>
     <div id="autocomplete-list" class="autocomplete-items"></div>
@@ -215,59 +206,100 @@
     <button type="submit">Save</button>
   </form>
 </div>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js "></script>
+<div id="popup" class="ol-popup">
+  <div class="popup-content"></div>
+  <a href="#" class="ol-popup-closer"></a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/ol@v10.5.0/dist/ol.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.5.0/ol.css">
 <script>
-  const imageBounds = [[0, 0], [6080, 6080]];
+  const imageBounds = [0, 0, 6080, 6080];
   const imageUrl = 'map.webp';
   const GIST_ID = '5c5b1173184b3389531fe6235001b800';
   const GITHUB_TOKEN = localStorage.getItem('gh_token');
   const FILE_NAME = 'rising.json';
   let currentMarker = null;
-  let currentLatLng = null;
+  let currentCoordinates = null;
   let activePlayers = [];
   let allPlayers = [];
+  var vectorSource = new ol.source.Vector();
 
-  const map = L.map('map', {
-    crs: L.CRS.Simple,
-    minZoom: -3,
-    maxZoom: 2,
-    zoomSnap: 0,
-    maxBoundsViscosity: 1,
-    maxBounds: [[0, 0], [6080, 8080]],
-    wheelPxPerZoomLevel: 20
+  const size = 6080; // Размер вашей карты в пикселях
+  const extent = [0, 0, size, size];
+  const projection = new ol.proj.Projection({
+    code: 'PIXEL',
+    units: 'pixels',
+    extent: extent
   });
 
-  L.imageOverlay(imageUrl, imageBounds).addTo(map);
-  map.fitBounds(imageBounds);
-  setTimeout(() => map.invalidateSize(), 200);
+  const map = new ol.Map({
+    target: 'map',
+    layers: [
+      new ol.layer.Image({
+        source: new ol.source.ImageStatic({
+          url: imageUrl,
+          imageExtent: extent, // Укажите тот же extent, что и у проекции
+          projection: projection // Используйте пользовательскую проекцию
+        })
+      }),
+      new ol.layer.Vector({
+        source: vectorSource,
+        extent: extent, // Укажите тот же extent, что и у проекции
+        projection: projection // Используйте пользовательскую проекцию
+        // updateWhileInteracting: true
+      })
+    ],
+    view: new ol.View({
+      projection: projection, // Укажите пользовательскую проекцию
+      center: ol.extent.getCenter(extent), // Центр в пиксельных координатах
+      zoom: -3,
+      minZoom: -5,
+      maxZoom: 7,
+      extent: [-1000, -1000, 8060, 8060] // Ограничьте область карты
+    }),
+    controls: ol.control.defaults.defaults().extend([
+      new ol.control.Zoom(),
+      new ol.control.Attribution()
+    ])
+  });
 
-  const markerListContainer = document.getElementById('markersContainer');
-  const modal = document.getElementById('modal');
-  const markerForm = document.getElementById('markerForm');
+  const container = document.getElementById('popup');
+  const content = container.querySelector('.popup-content');
+  const overlay = new ol.Overlay({
+    element: container,
+    autoPan: true,
+    autoPanAnimation: { duration: 250 }
+  });
+  map.addOverlay(overlay);
+  overlay.setPosition(undefined);
 
-  function getIcon(level, matches = 0) {
-    return new L.Icon({
-      iconUrl: ['V','IV','III','II','I'].includes(level?.toUpperCase())
-              ? `${level.toUpperCase()}.svg`
-              : 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-      className: `icon-level-${matches}`,
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34],
-      shadowSize: [41, 41]
+
+  function getIconStyle(level, matches = 0) {
+    console.log('======matches', matches,  1 - matches*2)
+    return new ol.style.Style({
+      image: new ol.style.Icon({
+        src: ['V','IV','III','II','I'].includes(level?.toUpperCase())
+                ? `${level.toUpperCase()}.svg`
+                : 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        opacity: 1 - matches * 0.2,
+        scale: 1,
+        cursor: 'pointer'
+      })
     });
   }
 
-  function showModal(latlng, markerData = null) {
-    currentLatLng = latlng;
-    currentMarker = markerData ? markerData.marker : null;
+
+  function showModal(coordinates, markerData = null) {
+    currentCoordinates = coordinates; // [x, y]
+    currentMarker = markerData ? markerData.feature : null;
+
     markerForm.level.value = markerData?.level || 'I';
     markerForm.title.value = markerData?.title || '';
     markerForm.description.value = markerData?.description || '';
     document.getElementById('modal-players-input').value = markerData?.players?.join(', ') || '';
     modal.style.display = 'flex';
-    setTimeout(() => map.invalidateSize(), 200);
+    setTimeout(() => map.updateSize(), 200);
   }
 
   markerForm.addEventListener('submit', function(e) {
@@ -279,31 +311,32 @@
       players: parsePlayers(document.getElementById('modal-players-input').value).map(player =>
               allPlayers.find(x => x.name.toLowerCase() === player.toLowerCase())?.name ?? player
       ),
-      lat: currentLatLng.lat,
-      lng: currentLatLng.lng
+      lat: currentCoordinates[1],
+      lng: currentCoordinates[0]
     };
-
     if (currentMarker) {
       updateMarker(currentMarker, data);
     } else {
       addMarker(data);
     }
-
     modal.style.display = 'none';
     applyPlayerFilter();
     saveMarkersToGist();
   });
 
+
   document.querySelector('.close-modal').addEventListener('click', () => {
     modal.style.display = 'none';
-    map.invalidateSize();
+    map.updateSize();
   });
 
+
   function parsePlayers(str) {
-    return str.split(',')
+    return str.split(/[,\n]/)
             .map(p => p.trim())
             .filter(Boolean);
   }
+
 
   function addMarker(data) {
     if (typeof data.lat !== 'number' || typeof data.lng !== 'number') {
@@ -311,39 +344,59 @@
       return;
     }
 
-    const marker = L.marker([data.lat, data.lng], {
-      icon: getIcon(data.level),
-      draggable: true,
-      data: data
-    }).addTo(map);
+    // Проверьте, что координаты в пределах карты
+    if (data.lng < 0 || data.lng > size || data.lat < 0 || data.lat > size) {
+      console.error("Маркер за пределами карты", data);
+      return;
+    }
 
-    createPopup(marker, data);
+    // Координаты в пиксельной проекции: [x, y]
+    const coordinates = [data.lng, data.lat];
+    const feature = new ol.Feature(new ol.geom.Point(coordinates));
 
-    marker.on('dragend', () => {
-      const latlng = marker.getLatLng();
-      marker.options.data.lat = latlng.lat;
-      marker.options.data.lng = latlng.lng;
-      saveMarkersToGist();
+    console.log('======getIconStyle(data.level)', feature)
+    feature.setStyle(getIconStyle(data.level));
+    feature.set('data', {
+      level: data.level,
+      title: data.title,
+      description: data.description,
+      players: data.players,
+      lat: data.lat,
+      lng: data.lng
     });
 
-    return marker;
+    vectorSource.addFeature(feature);
+    createPopup(feature);
+    return feature;
   }
-
-  function updateMarker(marker, newData) {
-    marker.setIcon(getIcon(newData.level));
-    marker.options.data = {
-      level: newData.level,
-      title: newData.title,
-      description: newData.description,
-      players: newData.players,
-      lat: marker.getLatLng().lat,
-      lng: marker.getLatLng().lng
-    };
-    createPopup(marker, newData);
+  function updateMarker(feature, newData) {
+    const coordinates = feature.getGeometry().getCoordinates();
+    feature.setStyle(getIconStyle(newData.level));
+    feature.setProperties({
+      data: {
+        level: newData.level,
+        title: newData.title,
+        description: newData.description,
+        players: newData.players,
+        lat: coordinates[1],
+        lng: coordinates[0]
+      }
+    });
+    createPopup(feature, newData);
     saveMarkersToGist();
   }
 
-  function createPopup(marker, data) {
+
+  function createPopup(feature) {
+    const data = feature.get('data');
+    const coordinates = feature.getGeometry().getCoordinates();
+    console.log('======coordinates', coordinates)
+    const currentPosition = overlay.getPosition();
+    if (currentPosition && currentPosition[0] === coordinates[0] && currentPosition[1] === coordinates[1]) {
+      overlay.setPosition(undefined);
+      return
+    }
+
     const popupContent = `
       <div><strong>${data.title}</strong></div>
       <div>${data.description}</div>
@@ -354,57 +407,93 @@
       return `<span>${text}</span>`;
     }).join('') || '-'}
       </div>
-      <button onclick="editMarker(${data.lat}, ${data.lng})">Edit</button>
-      <button onclick="removeMarker(this, ${data.lat}, ${data.lng})">Delete</button>
+      <button onclick="editMarker(${coordinates[0]}, ${coordinates[1]})">Edit</button>
+      <button onclick="removeMarker(null, ${coordinates[0]}, ${coordinates[1]})">Delete</button>
     `;
-    marker.bindPopup(popupContent);
+
+    content.innerHTML = popupContent;
+    overlay.setPosition(coordinates);
   }
 
-  window.editMarker = function(lat, lng) {
-    map.eachLayer(layer => {
-      if (layer instanceof L.Marker) {
-        const ll = layer.getLatLng();
-        if (ll.lat === lat && ll.lng === lng) {
-          const data = layer.options.data;
-          showModal(L.latLng(lat, lng), {
-            marker: layer,
-            level: data.level,
-            title: data.title,
-            description: data.description,
-            players: data.players
-          });
-        }
-      }
+  map.on('click', function(evt) {
+    const feature = map.forEachFeatureAtPixel(evt.pixel, function(feature) {
+      return feature;
+    });
+
+    if (feature) {
+      createPopup(feature);
+    } else {
+      const coordinates = evt.coordinate; // [x, y] в пользовательской проекции
+      showModal(coordinates);
+      overlay.setPosition(undefined)
+    }
+  });
+
+  map.on('pointermove', function (evt) {
+    const feature = map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+      return feature;
+    });
+
+    // Если наводим на маркер — курсор pointer
+    if (feature) {
+      map.getTargetElement().style.cursor = 'pointer';
+    } else {
+      // Иначе — стандартный курсор
+      map.getTargetElement().style.cursor = '';
+    }
+  });
+
+
+  window.editMarker = function(lng, lat) {
+    const coordinates = [lng, lat];
+    vectorSource.getFeaturesAtCoordinate(coordinates).forEach(function(feature) {
+      const data = feature.get('data');
+      showModal(coordinates, {
+        feature: feature,
+        level: data.level,
+        title: data.title,
+        description: data.description,
+        players: data.players
+      });
     });
   };
 
-  window.removeMarker = function(btn, lat, lng) {
-    map.eachLayer(layer => {
-      if (layer instanceof L.Marker) {
-        const ll = layer.getLatLng();
-        if (ll.lat === lat && ll.lng === lng) {
-          map.removeLayer(layer);
-        }
-      }
+
+  window.removeMarker = function(btn, lng, lat) {
+    const coordinates = [lng, lat];
+    vectorSource.getFeaturesAtCoordinate(coordinates).forEach(function(feature) {
+      vectorSource.removeFeature(feature);
     });
     saveMarkersToGist();
-    const parent = btn.closest('.marker-item');
+    const parent = btn?.closest('.marker-item');
     if (parent) parent.remove();
+    overlay.setPosition(undefined);
   };
+
 
   function getMarkersFromMap() {
     const markers = [];
-    map.eachLayer(layer => {
-      if (layer instanceof L.Marker) {
-        const d = layer.options.data;
-        markers.push(d);
-      }
+    vectorSource.forEachFeature(function(feature) {
+      const data = feature.get('data');
+      const geometry = feature.getGeometry();
+      const coords = geometry.getCoordinates(); // [x, y]
+
+      markers.push({
+        level: data.level,
+        title: data.title,
+        description: data.description,
+        players: data.players,
+        lat: coords[1],  // y
+        lng: coords[0]   // x
+      });
     });
     return markers;
   }
 
+
   function renderMarkerList() {
-    markerListContainer.innerHTML = '';
+    const markersContainer = document.getElementById('markersContainer');
+    markersContainer.innerHTML = '';
     const markers = getMarkersFromMap();
     markers.forEach(m => {
       const div = document.createElement('div');
@@ -413,46 +502,46 @@
         <div class="marker-level">[ ${m.level} ] <span class="marker-title">${m.title}</span></div>
         <div class="marker-players">
           ${m.players.map(p => {
-        const isMatch = activePlayers.includes(p);
+        const isMatch = activePlayers.includes(p.toLowerCase());
         const player = allPlayers.find(x => x.name.toLowerCase() === p.toLowerCase());
         const text = p + (player ? ` <span class="hours">${Number((player?.value/60/60).toFixed(2))}h</span>` : '');
         return `<span class=${isMatch ? "matched" : ""}>${text}</span>`;
       }).join('') || '-'}
         </div>`;
-
       div.onclick = () => {
-        map.flyTo([m.lat, m.lng], -1);
-        map.eachLayer(layer => {
-          if (layer instanceof L.Marker) {
-            const ll = layer.getLatLng();
-            if (ll.lat === m.lat && ll.lng === m.lng) {
-              layer.openPopup();
-            }
-          }
+        // Переводим пиксельные координаты в центр карты
+        map.getView().animate({
+          center: [m.lng, m.lat], // [x, y]
+          zoom: 4
         });
-      };
 
-      markerListContainer.appendChild(div);
+        // Открытие попапа
+        const features = vectorSource.getFeaturesAtCoordinate([m.lng, m.lat]);
+        if (features.length > 0) {
+          const feature = features[0];
+          createPopup(feature);
+        }
+      };
+      markersContainer.appendChild(div);
     });
   }
 
+
   async function saveMarkersToGist() {
-    const markers = getMarkersFromMap();
+    let markers = getMarkersFromMap()
+    markers = markers.filter((marker, index) => index <= markers.findIndex(m => m.lat === marker.lat && m.lng === marker.lng));
     if (!GITHUB_TOKEN) {
       localStorage.setItem('mapMarkers', JSON.stringify(markers));
       return;
     }
-
     const payload = {
       description: 'V: RISING Map Markers',
       public: false,
       files: {}
     };
-
     payload.files[FILE_NAME] = {
       content: JSON.stringify(markers, null, 2)
     };
-
     try {
       const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
         method: 'PATCH',
@@ -462,7 +551,6 @@
         },
         body: JSON.stringify(payload)
       });
-
       if (res.status === 200) {
         renderMarkerList();
       }
@@ -470,6 +558,7 @@
       console.error('Ошибка сохранения в Gist', e);
     }
   }
+
 
   async function loadMarkersFromGist() {
     try {
@@ -489,7 +578,6 @@
     } catch (e) {
       console.error(e, 'Не удалось загрузить из Gist');
     }
-
     const localMarkers = JSON.parse(localStorage.getItem('mapMarkers'));
     if (localMarkers) {
       localMarkers.forEach(m => {
@@ -498,30 +586,23 @@
         }
       });
     }
-
+    overlay.setPosition(undefined);
     renderMarkerList();
   }
+
 
   function applyPlayerFilter() {
-    activePlayers = parsePlayers(document.getElementById('playerNamesInput').value);
-    map.eachLayer(layer => {
-      if (layer instanceof L.Marker) {
-        const markerData = layer.options.data;
-        const matches = markerData.players.filter(p => activePlayers.includes(p));
-        layer.setIcon(getIcon(markerData.level, matches.length));
-      }
+    activePlayers = parsePlayers(document.getElementById('playerNamesInput').value).map(x => x.toLowerCase());
+    console.log('======activePlayers', activePlayers)
+    vectorSource.forEachFeature(function(feature) {
+      const data = feature.get('data');
+      const matches = data.players.filter(p => activePlayers.includes(p.toLowerCase()));
+      console.log('======matches', matches)
+      feature.setStyle(getIconStyle(data.level, matches.length));
     });
     renderMarkerList();
   }
 
-  map.on('click', e => showModal(e.latlng));
-
-  window.addEventListener('load', () => {
-    loadPlayerList().then(() => {
-      loadMarkersFromGist();
-    });
-    window.addEventListener('resize', () => map.invalidateSize());
-  });
 
   async function loadPlayerList() {
     try {
@@ -530,31 +611,31 @@
       const start = new Date(end);
       start.setUTCMonth(start.getUTCMonth() - 1);
       const period = `${start.toISOString()}:${end.toISOString()}`
-
       allPlayers = (await Promise.all([
         fetch(`https://api.battlemetrics.com/servers/33218693/relationships/leaderboards/time?page[size]=100&page[offset]=0&page[rel]=prev&filter[period]=${period}`).then(r => r.json().then(j => j.data.map(p => p.attributes))),
         fetch(`https://api.battlemetrics.com/servers/33218693/relationships/leaderboards/time?page[size]=100&page[offset]=100&page[rel]=prev&filter[period]=${period}`).then(r => r.json().then(j => j.data.map(p => p.attributes)))
       ])).flat();
-
       renderMarkerList();
     } catch (e) {
       console.error('Ошибка загрузки списка игроков', e);
     }
   }
 
+
   function autoCompletePlayers(inputElement) {
     const val = inputElement.value.trim();
     const container = inputElement.nextElementSibling;
     container.innerHTML = "";
-    if (!val) return;
-
+    if (!val) {
+      applyPlayerFilter();
+      return;
+    }
     const currentList = val.split(',').map(s => s.trim());
     const last = currentList.pop().toLowerCase();
     const matches = allPlayers.filter(p =>
             p.name.toLowerCase().startsWith(last) &&
             !currentList.map(x => x.toLowerCase()).includes(p.name.toLowerCase())
     );
-
     matches.forEach(match => {
       const item = document.createElement("div");
       item.textContent = match.name;
@@ -567,13 +648,23 @@
       };
       container.appendChild(item);
     });
+    applyPlayerFilter()
   }
+
 
   document.addEventListener("click", function(e) {
     const list = document.getElementById("autocomplete-list");
     const modalList = document.getElementById("autocomplete-modal-list");
     if (!e.target.closest('#playerNamesInput')) list.innerHTML = "";
     if (!e.target.closest('#modal-players-input')) modalList.innerHTML = "";
+  });
+
+
+  window.addEventListener('load', () => {
+    loadPlayerList().then(() => {
+      loadMarkersFromGist();
+    });
+    window.addEventListener('resize', () => map.updateSize());
   });
 </script>
 </body>
