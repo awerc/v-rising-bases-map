@@ -276,7 +276,6 @@
 
 
   function getIconStyle(level, matches = 0) {
-    console.log('======matches', matches,  1 - matches*2)
     return new ol.style.Style({
       image: new ol.style.Icon({
         src: ['V','IV','III','II','I'].includes(level?.toUpperCase())
@@ -284,7 +283,6 @@
                 : 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
         opacity: 1 - matches * 0.2,
         scale: 1,
-        cursor: 'pointer'
       })
     });
   }
@@ -439,7 +437,7 @@
       map.getTargetElement().style.cursor = 'pointer';
     } else {
       // Иначе — стандартный курсор
-      map.getTargetElement().style.cursor = '';
+      map.getTargetElement().style.cursor = 'grab';
     }
   });
 
@@ -658,6 +656,14 @@
     if (!e.target.closest('#playerNamesInput')) list.innerHTML = "";
     if (!e.target.closest('#modal-players-input')) modalList.innerHTML = "";
   });
+
+  document.addEventListener('keydown', event => {
+    if (event.key === "Escape") {
+      modal.style.display = 'none';
+      overlay.setPosition(undefined);
+    }
+  });
+
 
 
   window.addEventListener('load', () => {
