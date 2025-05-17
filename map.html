@@ -139,7 +139,7 @@
       cursor: pointer;
       margin-right: 5px;
     }
-    #popup button:nth-child(2) {
+    #popup button:nth-of-type(2) {
       background: #52d37b;
     }
     .icon-level-0 { opacity: 1; }
@@ -166,6 +166,20 @@
     }
     .autocomplete-items div:hover {
       background-color: rgba(43, 43, 43, 0.95);
+    }
+    .online {
+      position: relative;
+    }
+    .online:after {
+      display: block;
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: #46d91c;
+      position: absolute;
+      top: 1px;
+      right: -4px;
+      border-radius: 100%;
     }
   </style>
 </head>
@@ -214,6 +228,9 @@
 <script src="https://cdn.jsdelivr.net/npm/ol@v10.5.0/dist/ol.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.5.0/ol.css">
 <script>
+  const API_ENDPOINT = 'https://api.battlemetrics.com'
+  const SERVER = '33218693'
+  const API_URL = `${API_ENDPOINT}/servers/${SERVER}`
   const imageBounds = [0, 0, 6080, 6080];
   const imageUrl = 'map.webp';
   const GIST_ID = '5c5b1173184b3389531fe6235001b800';
@@ -400,13 +417,14 @@
       <div>${data.description}</div>
       <div class="marker-players">
         ${data.players.map(p => {
+      const isMatch = activePlayers.includes(p.toLowerCase());
       const player = allPlayers.find(x => x.name.toLowerCase() === p.toLowerCase());
-      const text = p + (player ? ` <span class="hours">${Number((player?.value / 60 / 60).toFixed(2))}h</span>` : '');
-      return `<span>${text}</span>`;
+      const text = `<span class=${player?.online ? "online" : ""}>${p}</span>` + (player ? ` <span class="hours">${Number((player?.value/60/60).toFixed(2))}h</span>` : '');
+      return `<span class=${isMatch ? "matched" : ""}>${text}</span>`;
     }).join('') || '-'}
       </div>
-      <button onclick="editMarker(${coordinates[0]}, ${coordinates[1]})">Edit</button>
       <button onclick="removeMarker(null, ${coordinates[0]}, ${coordinates[1]})">Delete</button>
+      <button onclick="editMarker(${coordinates[0]}, ${coordinates[1]})">Edit</button>
     `;
 
     content.innerHTML = popupContent;
@@ -493,7 +511,10 @@
     const markersContainer = document.getElementById('markersContainer');
     markersContainer.innerHTML = '';
     const markers = getMarkersFromMap();
-    markers.forEach(m => {
+    markers
+        .slice()
+        .sort((a, b) => b.players.filter(p => allPlayers.find(x => x.name.toLowerCase() === p.toLowerCase())?.online).length - a.players.filter(p => allPlayers.find(x => x.name.toLowerCase() === p.toLowerCase())?.online).length)
+        .forEach(m => {
       const div = document.createElement('div');
       div.className = 'marker-item';
       div.innerHTML = `
@@ -502,7 +523,7 @@
           ${m.players.map(p => {
         const isMatch = activePlayers.includes(p.toLowerCase());
         const player = allPlayers.find(x => x.name.toLowerCase() === p.toLowerCase());
-        const text = p + (player ? ` <span class="hours">${Number((player?.value/60/60).toFixed(2))}h</span>` : '');
+        const text = `<span class=${player?.online ? "online" : ""}>${p}</span>` + (player ? ` <span class="hours">${Number((player?.value/60/60).toFixed(2))}h</span>` : '');
         return `<span class=${isMatch ? "matched" : ""}>${text}</span>`;
       }).join('') || '-'}
         </div>`;
@@ -609,10 +630,12 @@
       const start = new Date(end);
       start.setUTCMonth(start.getUTCMonth() - 1);
       const period = `${start.toISOString()}:${end.toISOString()}`
+      const online = await fetch(`${API_URL}?include=session&fields[session]=start,stop,name`).then(x => x.json()).then(response => response.included.filter(x => x.type ==='session' && !x.attributes.stop).map(x => x.attributes.name));
       allPlayers = (await Promise.all([
-        fetch(`https://api.battlemetrics.com/servers/33218693/relationships/leaderboards/time?page[size]=100&page[offset]=0&page[rel]=prev&filter[period]=${period}`).then(r => r.json().then(j => j.data.map(p => p.attributes))),
-        fetch(`https://api.battlemetrics.com/servers/33218693/relationships/leaderboards/time?page[size]=100&page[offset]=100&page[rel]=prev&filter[period]=${period}`).then(r => r.json().then(j => j.data.map(p => p.attributes)))
-      ])).flat();
+        fetch(`${API_URL}/relationships/leaderboards/time?page[size]=100&page[offset]=0&page[rel]=prev&filter[period]=${period}`).then(r => r.json().then(j => j.data.map(p => p.attributes))),
+        fetch(`${API_URL}/relationships/leaderboards/time?page[size]=100&page[offset]=100&page[rel]=prev&filter[period]=${period}`).then(r => r.json().then(j => j.data.map(p => p.attributes))),
+        fetch(`${API_URL}/relationships/leaderboards/time?page[size]=100&page[offset]=200&page[rel]=prev&filter[period]=${period}`).then(r => r.json().then(j => j.data.map(p => p.attributes)))
+      ])).flat().map(x => ({...x, online: online.includes(x.name)}));
       renderMarkerList();
     } catch (e) {
       console.error('Ошибка загрузки списка игроков', e);
