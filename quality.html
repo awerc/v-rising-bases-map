@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Симуляция улучшения качества</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js "></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #1e1e1e;
+      color: #eee;
+      font-family: 'Shantell Sans', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    main {
+      display: flex;
+      height: 100vh;
+    }
+
+    .controls-panel {
+      width: 350px;
+      background: rgba(30, 30, 30, 0.95);
+      border-right: 2px solid #444;
+      overflow-y: auto;
+      padding: 20px;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.7);
+      z-index: 999;
+      font-size: 16px;
+    }
+
+    .results-container {
+      flex: 1;
+      padding: 20px;
+      overflow: auto;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 8px;
+      background: #2a2a2a;
+      border: 1px solid #555;
+      color: #eee;
+      border-radius: 4px;
+    }
+
+    .mode-selector {
+      display: flex;
+      gap: 15px;
+      margin-top: 8px;
+    }
+
+    .simulation-params {
+      margin-top: 15px;
+      padding: 10px;
+      background: rgba(43, 43, 43, 0.5);
+      border-radius: 4px;
+    }
+
+    button {
+      background: #d35252;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+    }
+
+    canvas {
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+<main>
+
+  <aside class="controls-panel">
+    <h2>Симуляция улучшения качества</h2>
+
+    <!-- Основные параметры -->
+    <div class="form-group">
+      <label class="form-label">Текущее качество (%):</label>
+      <input type="number" id="currentQualityInput" class="form-input" value="98" min="-100" max="100" step="0.1">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Целевое качество (%):</label>
+      <input type="number" id="targetQualityInput" class="form-input" value="100" min="-100" max="100" step="0.1">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Количество симуляций:</label>
+      <input type="number" id="simulationCountInput" class="form-input" value="10000" min="100" max="10000" step="100">
+    </div>
+
+    <!-- Режимы симуляции -->
+    <div class="form-group">
+      <label class="form-label">Режим:</label>
+      <div class="mode-selector">
+        <label>
+          <input type="radio" name="simulationMode" value="slime" checked> Жижа
+        </label>
+        <label>
+          <input type="radio" name="simulationMode" value="fish"> Рыба
+        </label>
+      </div>
+    </div>
+
+    <!-- Параметры Жижи -->
+    <div id="slimeParameters" class="simulation-params">
+      <p class="description">Увеличивает качество, но с шансом превращения в мутанта</p>
+      <div class="form-group">
+        <label class="form-label">Мин. улучшение качества:</label>
+        <input type="number" id="slimeQualityMin" class="form-input" value="1" min="0" max="10" step="0.1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Макс. улучшение качества:</label>
+        <input type="number" id="slimeQualityMax" class="form-input" value="2" min="0" max="10" step="0.1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Шанс мутации (%):</label>
+        <input type="number" id="mutateChanceInput" class="form-input" value="35" min="0" max="100" step="1">
+      </div>
+    </div>
+
+    <!-- Параметры Рыбы -->
+    <div id="fishParameters" class="simulation-params" style="display: none;">
+      <p class="description">Случайное изменение качества и HP</p>
+      <div class="form-group">
+        <label class="form-label">Мин. изменение HP:</label>
+        <input type="number" id="hpMinInput" class="form-input" value="-100" min="-100" max="100" step="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Макс. изменение HP:</label>
+        <input type="number" id="hpMaxInput" class="form-input" value="100" min="-100" max="100" step="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Мин. изменение качества:</label>
+        <input type="number" id="qualityMinInput" class="form-input" value="-2" min="-100" max="100" step="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Макс. изменение качества:</label>
+        <input type="number" id="qualityMaxInput" class="form-input" value="2" min="-100" max="100" step="1">
+      </div>
+    </div>
+
+    <button id="runButton">Запустить симуляцию</button>
+  </aside>
+
+
+  <div class="results-container">
+    <div id="simulation-results" class="results-output"></div>
+    <canvas id="attemptsChart" width="400" height="200"></canvas>
+  </div>
+</main>
+
+<script>
+  // Инициализация переключателя режимов
+  document.querySelectorAll('input[name="simulationMode"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      document.getElementById('slimeParameters').style.display =
+              this.value === 'slime' ? 'block' : 'none';
+      document.getElementById('fishParameters').style.display =
+              this.value === 'fish' ? 'block' : 'none';
+    });
+  });
+
+  // Обработчик кнопки запуска
+  document.getElementById('runButton').addEventListener('click', runSimulation);
+
+  function runSimulation() {
+    // Получаем текущий режим
+    const mode = document.querySelector('input[name="simulationMode"]:checked').value;
+
+    // Базовые параметры
+    const currentQuality = parseFloat(document.getElementById('currentQualityInput').value);
+    const targetQuality = parseFloat(document.getElementById('targetQualityInput').value);
+    const totalSimulations = parseInt(document.getElementById('simulationCountInput').value);
+
+    // Проверка целевого качества
+    if (targetQuality <= currentQuality) {
+      alert('Целевое качество должно быть выше текущего!');
+      return;
+    }
+
+    // Результаты
+    const attemptsList = [];
+    let successCount = 0;
+    let mutationSimulations = 0;
+
+    // Параметры Жижи
+    const slimeParams = {
+      minQuality: parseFloat(document.getElementById('slimeQualityMin').value),
+      maxQuality: parseFloat(document.getElementById('slimeQualityMax').value),
+      mutateChance: parseFloat(document.getElementById('mutateChanceInput').value)
+    };
+
+    // Параметры Рыбы
+    const fishParams = {
+      hpMin: parseInt(document.getElementById('hpMinInput').value),
+      hpMax: parseInt(document.getElementById('hpMaxInput').value),
+      qualityMin: parseInt(document.getElementById('qualityMinInput').value),
+      qualityMax: parseInt(document.getElementById('qualityMaxInput').value)
+    };
+
+    // Запуск симуляций
+    for (let sim = 0; sim < totalSimulations; sim++) {
+      let quality = currentQuality;
+      let attempts = 0;
+      let failed = false;
+      let simulationHadMutation = false;
+
+      while (quality < targetQuality && !failed) {
+        attempts++;
+        let qualityChange = 0;
+        let hpChange = 0;
+        let isMutation = false;
+
+        // Логика для текущего режима
+        if (mode === 'slime') {
+          qualityChange = (Math.random() * (slimeParams.maxQuality - slimeParams.minQuality) + slimeParams.minQuality).toFixed(1);
+          isMutation = Math.random() * 100 < slimeParams.mutateChance;
+        } else {
+          qualityChange = Math.floor(Math.random() * (fishParams.qualityMax - fishParams.qualityMin + 1)) + fishParams.qualityMin;
+          hpChange = Math.floor(Math.random() * (fishParams.hpMax - fishParams.hpMin + 1)) + fishParams.hpMin;
+        }
+
+        // Проверка на неудачу
+        if (isMutation || hpChange === -100) {
+          failed = true;
+          attemptsList.push(null);
+          if (isMutation) simulationHadMutation = true;
+        } else {
+          quality += parseFloat(qualityChange);
+          if (quality > 100) quality = 100;
+          if (quality >= targetQuality) {
+            attemptsList.push(attempts);
+            successCount++;
+            break;
+          }
+        }
+
+        // Защита от бесконечных циклов
+        if (attempts > 1000) {
+          failed = true;
+          attemptsList.push(null);
+        }
+      }
+
+      if (simulationHadMutation) mutationSimulations++;
+    }
+
+    // Статистика
+    const successfulAttempts = attemptsList.filter(a => a !== null);
+    const stats = calculateStatistics(successfulAttempts);
+
+    // Отображение результатов
+    displayResults(
+            currentQuality,
+            targetQuality,
+            successCount,
+            totalSimulations,
+            stats,
+            mutationSimulations,
+            mode === 'slime'
+    );
+
+    // График
+    if (successfulAttempts.length > 0) {
+      createAttemptsChart(successfulAttempts);
+    }
+  }
+
+  function calculateStatistics(data) {
+    if (data.length === 0) return null;
+
+    const sorted = [...data].sort((a, b) => a - b);
+    const sum = sorted.reduce((acc, val) => acc + val, 0);
+    const mean = sum / sorted.length;
+    const min = sorted[0];
+    const max = sorted[sorted.length - 1];
+    const median = sorted[Math.floor(sorted.length / 2)];
+
+    // Рассчитываем стандартное отклонение
+    const variance = sorted.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / sorted.length;
+    const stdDev = Math.sqrt(variance);
+
+    return {
+      mean: mean.toFixed(1),
+      min: min,
+      max: max,
+      median: median,
+      stdDev: stdDev.toFixed(1),
+      count: sorted.length,
+    };
+  }
+
+  function displayResults(
+          currentQuality,
+          targetQuality,
+          successCount,
+          totalSimulations,
+          stats,
+          mutationSimulations,
+          isSlimeMode
+  ) {
+    const resultsDiv = document.getElementById('simulation-results');
+    resultsDiv.innerHTML = '';
+
+    // Базовая статистика
+    const baseStats = document.createElement('div');
+    baseStats.innerHTML = `
+        <h3>Результаты симуляции</h3>
+        <p>Текущее качество: ${currentQuality}% → Целевое качество: ${targetQuality}%</p>
+        <p>Успешных симуляций: ${successCount} из ${totalSimulations} (${((successCount / totalSimulations) * 100).toFixed(1)}%)</p>
+        ${isSlimeMode ? `<p>Симуляций с превращением в мутанта: ${mutationSimulations} (${((mutationSimulations / totalSimulations) * 100).toFixed(1)}%)</p>` : ''}
+      `;
+    resultsDiv.appendChild(baseStats);
+
+    if (stats) {
+      // Подробная статистика
+      const detailStats = document.createElement('div');
+      detailStats.innerHTML = `
+          <h4>Статистика успешных попыток</h4>
+          <ul>
+            <li>Среднее количество попыток: ${stats.mean}</li>
+            <li>Стандартное отклонение: ±${stats.stdDev}</li>
+            <li>Минимальное количество попыток: ${stats.min}</li>
+            <li>Максимальное количество попыток: ${stats.max}</li>
+            <li>Медиана: ${stats.median}</li>
+          </ul>
+        `;
+      resultsDiv.appendChild(detailStats);
+    } else {
+      const noSuccess = document.createElement('p');
+      noSuccess.textContent = 'Ни одна из симуляций не достигла цели. Попробуйте снизить целевое качество.';
+      resultsDiv.appendChild(noSuccess);
+    }
+  }
+
+  function createAttemptsChart(data) {
+    const ctx = document.getElementById('attemptsChart');
+
+    // Подсчет частот для бинов
+    const min = Math.min(...data);
+    const max = Math.max(...data);
+    const bins = Math.min(20, max - min + 1);
+    const binSize = (max - min) / bins;
+    const frequencies = Array(bins).fill(0);
+
+    data.forEach(val => {
+      const binIndex = Math.min(bins - 1, Math.floor((val - min) / binSize));
+      frequencies[binIndex]++;
+    });
+
+    // Создаем подписи для бинов
+    const labels = Array.from({length: bins}, (_, i) => {
+      const from = Math.ceil(min + i * binSize);
+      const to = Math.floor(min + (i + 1) * binSize);
+      return from !== to ? `${from}–${to}` : from;
+    });
+
+    if (window.attemptsChartInstance) {
+      window.attemptsChartInstance.destroy();
+    }
+
+    window.attemptsChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Частота количества попыток',
+          data: frequencies,
+          backgroundColor: 'rgba(54, 162, 235, 0.6)',
+        }],
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            title: { display: true, text: 'Количество попыток' },
+            ticks: { autoSkip: false },
+          },
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Частота' },
+          },
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                return `${context.parsed.y} симуляций (${((context.parsed.y / context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0)) * 100).toFixed(1)}%)`;
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+</script>
+</body>
+</html>
