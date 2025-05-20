@@ -42,14 +42,17 @@
       z-index: 999;
       font-size: 16px;
     }
-    #playerNamesInput {
-      width: 100%;
-      height: 80px;
+    input, textarea {
       background: #2a2a2a;
       color: #fff;
       border: 1px solid #555;
-      padding: 10px;
       resize: none;
+      padding: 4px;
+    }
+    #playerNamesInput {
+      padding: 10px;
+      width: 100%;
+      height: 80px;
     }
 
     .marker-title {
@@ -98,14 +101,25 @@
       border: 1px solid #444;
       padding: 5px;
     }
-    button.close-modal {
-      float: right;
-      background: #d35252;
+
+    button {
       color: white;
-      border: none;
       padding: 4px 8px;
       cursor: pointer;
       font-size: 18px;
+      background: #2a2a2a;
+      border: 1px solid #555;
+
+    }
+    button:hover {
+      background: #393939;
+
+    }
+
+    button.close-modal {
+      float: right;
+      background: #d35252;
+
     }
 
     #popup {
@@ -185,7 +199,6 @@
 
     button, input[type="button"], input[type="reset"], input[type="submit"] {
       appearance: button;
-      background-color: transparent;
       background-image: none;
     }
 
@@ -314,6 +327,10 @@
       width: 0;
       height: 0;
     }
+
+    .spacer {
+      height: 8px;
+    }
   </style>
 </head>
 <body>
@@ -357,11 +374,27 @@
 
 <div id="map"></div>
 <aside id="markerList">
-  <label class="full-width"><h3>Players list</h3>
+  <div style="display: flex;gap: 4px;align-items: flex-end">
+    <label class="full-width">
+      <h3>Map ID:</h3>
+      <input type="text" id="mapIdInput" placeholder="MAP-..." />
+    </label>
+    <button id="shareMapBtn" title="Share link">
+      🔗
+    </button>
+    <button id="generateMapIdBtn" title="Generate new Map ID">
+      🔁
+    </button>
+  </div>
+
+  <div class="spacer"></div>
+  <label class="full-width">
+    <h3>Players list</h3>
     <textarea id="playerNamesInput" oninput="autoCompletePlayers(this)" placeholder="Player1, Player2..."></textarea>
     <div id="autocomplete-list" class="autocomplete-items"></div>
   </label>
-  <hr />
+  <div class="spacer"></div>
+
   <h3>Markers</h3>
   <div id="markersContainer"></div>
 </aside>
@@ -399,14 +432,148 @@
 <script src="https://cdn.jsdelivr.net/npm/ol@v10.5.0/dist/ol.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.5.0/ol.css">
 <script>
+  async function saveMarkersToRedis(mapId, markers) {
+    try {
+      const response = await fetch(`/api/map/${mapId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(markers)
+      });
+      if (!response.ok) throw new Error("Ошибка сохранения");
+    } catch (error) {
+      console.error("Ошибка сохранения карты:", error);
+    }
+  }
+
+  async function loadMarkersFromRedis(mapId) {
+    try {
+      const response = await fetch(`/api/map/${mapId}`);
+      if (!response.ok) throw new Error("Карта не найдена");
+      const markers = await response.json();
+      vectorSource.clear();
+      markers.forEach(m => addMarker(m));
+    } catch (error) {
+      console.error("Ошибка загрузки карты:", error);
+      vectorSource.clear();
+    }
+    overlay.setPosition(undefined);
+    await renderMarkerList();
+  }
+
+  // Инициализация при загрузке страницы
+  // === Кодирование и извлечение server_id из map_id ===
+  function encodeMapId(serverId) {
+    const timestamp = Date.now();
+    const salt = Math.random().toString(36).substring(2, 6);
+    const data = `${serverId}|${timestamp}|${salt}`;
+    return 'MAP-' + btoa(data)
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .substring(0, 12); // Компактный формат
+  }
+
+  function decodeMapId(encoded) {
+    try {
+      const base64 = encoded.replace(/^MAP-/, '').replace(/-/g, '+').replace(/_/g, '/');
+      const decoded = atob(base64);
+      const [serverId] = decoded.split('|');
+      return serverId || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // === Работа с DOM ===
+  const mapIdInput = document.getElementById('mapIdInput');
+  const generateMapIdBtn = document.getElementById('generateMapIdBtn');
+  const shareMapBtn = document.getElementById('shareMapBtn');
+
+  shareMapBtn.addEventListener('click', () => {
+    const currentMapId = mapIdInput.value.trim();
+    if (!currentMapId) return;
+
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set("map", currentMapId);
+    navigator.clipboard.writeText(currentUrl.toString())
+            .then(() => alert('The link has been copied to the clipboard!'))
+            .catch(err => console.error('Copy error:', err));
+  });
+
+  // === Инициализация ===
+  window.addEventListener('load', async () => {
+    const urlParams = getURLParams();
+    let mapId = urlParams.map || loadMapState().mapId || null;
+
+    if (mapId) {
+      mapIdInput.value = mapId;
+      const serverId = decodeMapId(mapId);
+      if (serverId) {
+        await loadPlayerList(serverId)
+      }
+      await loadMarkersFromRedis(mapId);
+    }
+
+    mapIdInput.addEventListener('input', async () => {
+      const newMapId = mapIdInput.value.trim();
+      const serverId = decodeMapId(newMapId);
+      updateURL(null, newMapId);
+      saveMapState(null, newMapId);
+      if (serverId) {
+        await loadPlayerList(serverId)
+      }
+      await loadMarkersFromRedis(newMapId);
+    });
+
+    generateMapIdBtn.addEventListener('click', async () => {
+      const serverId = prompt('Enter the server ID (you can leave it blank):');
+      const newMapId = encodeMapId(serverId || '');
+      mapIdInput.value = newMapId;
+      updateURL(null, newMapId);
+      saveMapState(null, newMapId);
+      if (serverId) {
+        await loadPlayerList(serverId)
+      }
+      await loadMarkersFromRedis(newMapId);
+    });
+  });
+
+  // === Парсинг URL ===
+  function getURLParams() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      map: params.get("map") || null
+    };
+  }
+
+  // === Сохранение состояния ===
+  function saveMapState(_, mapId) {
+    localStorage.setItem("map_id", mapId);
+  }
+
+  function loadMapState() {
+    return {
+      mapId: localStorage.getItem("map_id") || null
+    };
+  }
+
+  // === Обновление URL ===
+  function updateURL(_, mapId) {
+    const url = new URL(window.location.href);
+    if (mapId) url.searchParams.set("map", mapId);
+    else url.searchParams.delete("map");
+    window.history.replaceState({}, "", url);
+  }
+
+  async function saveMarkersToGist() {
+    const markers = getMarkersFromMap();
+    return saveMarkersToRedis(localStorage.getItem("map_id"), markers);
+  }
+
   const API_ENDPOINT = 'https://api.battlemetrics.com'
-  const SERVER = '33218693'
-  const API_URL = `${API_ENDPOINT}/servers/${SERVER}`
   const imageBounds = [0, 0, 6080, 6080];
   const imageUrl = 'images/map/map.webp';
-  const GIST_ID = '5c5b1173184b3389531fe6235001b800';
-  const GITHUB_TOKEN = localStorage.getItem('gh_token');
-  const FILE_NAME = 'rising.json';
   let currentMarker = null;
   let currentCoordinates = null;
   let activePlayers = [];
@@ -446,10 +613,6 @@
       maxZoom: 7,
       extent: [-1000, -1000, 8060, 8060] // Ограничьте область карты
     }),
-    controls: ol.control.defaults.defaults().extend([
-      new ol.control.Zoom(),
-      new ol.control.Attribution()
-    ])
   });
 
   const container = document.getElementById('popup');
@@ -540,7 +703,6 @@
     const coordinates = [data.lng, data.lat];
     const feature = new ol.Feature(new ol.geom.Point(coordinates));
 
-    console.log('======getIconStyle(data.level)', feature)
     feature.setStyle(getIconStyle(data.level));
     feature.set('data', {
       level: data.level,
@@ -576,7 +738,6 @@
   function createPopup(feature) {
     const data = feature.get('data');
     const coordinates = feature.getGeometry().getCoordinates();
-    console.log('======coordinates', coordinates)
     const currentPosition = overlay.getPosition();
     if (currentPosition && currentPosition[0] === coordinates[0] && currentPosition[1] === coordinates[1]) {
       overlay.setPosition(undefined);
@@ -717,97 +878,30 @@
   }
 
 
-  async function saveMarkersToGist() {
-    let markers = getMarkersFromMap()
-    markers = markers.filter((marker, index) => index <= markers.findIndex(m => m.lat === marker.lat && m.lng === marker.lng));
-    if (!GITHUB_TOKEN) {
-      localStorage.setItem('mapMarkers', JSON.stringify(markers));
-      return;
-    }
-    const payload = {
-      description: 'V: RISING Map Markers',
-      public: false,
-      files: {}
-    };
-    payload.files[FILE_NAME] = {
-      content: JSON.stringify(markers, null, 2)
-    };
-    try {
-      const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `token ${GITHUB_TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-      if (res.status === 200) {
-        renderMarkerList();
-      }
-    } catch (e) {
-      console.error('Ошибка сохранения в Gist', e);
-    }
-  }
-
-
-  async function loadMarkersFromGist() {
-    try {
-      const res = await fetch(`https://api.github.com/gists/${GIST_ID}`);
-      if (res.ok) {
-        const json = await res.json();
-        const raw = json.files[FILE_NAME]?.content;
-        if (raw) {
-          const markers = JSON.parse(raw);
-          markers.forEach(m => {
-            if (typeof m.lat === 'number' && typeof m.lng === 'number') {
-              addMarker(m);
-            }
-          });
-        }
-      }
-    } catch (e) {
-      console.error(e, 'Не удалось загрузить из Gist');
-    }
-    const localMarkers = JSON.parse(localStorage.getItem('mapMarkers'));
-    if (localMarkers) {
-      localMarkers.forEach(m => {
-        if (typeof m.lat === 'number' && typeof m.lng === 'number') {
-          addMarker(m);
-        }
-      });
-    }
-    overlay.setPosition(undefined);
-    renderMarkerList();
-  }
-
-
   function applyPlayerFilter() {
     activePlayers = parsePlayers(document.getElementById('playerNamesInput').value).map(x => x.toLowerCase());
-    console.log('======activePlayers', activePlayers)
     vectorSource.forEachFeature(function(feature) {
       const data = feature.get('data');
       const matches = data.players.filter(p => activePlayers.includes(p.toLowerCase()));
-      console.log('======matches', matches)
       feature.setStyle(getIconStyle(data.level, matches.length));
     });
     renderMarkerList();
   }
 
 
-  async function loadPlayerList() {
+  async function loadPlayerList(server) {
     try {
       const end = new Date();
       end.setUTCHours(0,0,0,0);
       const start = new Date(end);
       start.setUTCMonth(start.getUTCMonth() - 1);
       const period = `${start.toISOString()}:${end.toISOString()}`
-      const online = await fetch(`${API_URL}?include=session&fields[session]=start,stop,name`).then(x => x.json()).then(response => response.included.filter(x => x.type ==='session' && !x.attributes.stop).map(x => x.attributes.name));
+      const online = await fetch(`${API_ENDPOINT}/servers/${server}?include=session&fields[session]=start,stop,name`).then(x => x.json()).then(response => response.included.filter(x => x.type ==='session' && !x.attributes.stop).map(x => x.attributes.name));
       allPlayers = (await Promise.all([
-        fetch(`${API_URL}/relationships/leaderboards/time?page[size]=100&page[offset]=0&page[rel]=prev&filter[period]=${period}`).then(r => r.json().then(j => j.data.map(p => p.attributes))),
-        fetch(`${API_URL}/relationships/leaderboards/time?page[size]=100&page[offset]=100&page[rel]=prev&filter[period]=${period}`).then(r => r.json().then(j => j.data.map(p => p.attributes))),
-        fetch(`${API_URL}/relationships/leaderboards/time?page[size]=100&page[offset]=200&page[rel]=prev&filter[period]=${period}`).then(r => r.json().then(j => j.data.map(p => p.attributes)))
+        fetch(`${API_ENDPOINT}/servers/${server}/relationships/leaderboards/time?page[size]=100&page[offset]=0&page[rel]=prev&filter[period]=${period}`).then(r => r.json().then(j => j.data.map(p => p.attributes))),
+        fetch(`${API_ENDPOINT}/servers/${server}/relationships/leaderboards/time?page[size]=100&page[offset]=100&page[rel]=prev&filter[period]=${period}`).then(r => r.json().then(j => j.data.map(p => p.attributes))),
+        fetch(`${API_ENDPOINT}/servers/${server}/relationships/leaderboards/time?page[size]=100&page[offset]=200&page[rel]=prev&filter[period]=${period}`).then(r => r.json().then(j => j.data.map(p => p.attributes)))
       ])).flat().map(x => ({...x, online: online.includes(x.name)}));
-      renderMarkerList();
     } catch (e) {
       console.error('Ошибка загрузки списка игроков', e);
     }
@@ -856,15 +950,6 @@
       modal.style.display = 'none';
       overlay.setPosition(undefined);
     }
-  });
-
-
-
-  window.addEventListener('load', () => {
-    loadPlayerList().then(() => {
-      loadMarkersFromGist();
-    });
-    window.addEventListener('resize', () => map.updateSize());
   });
 </script>
 </body>
