@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <title>Дерево крафта предметов</title>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js "></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css " />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js "></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <link rel="apple-touch-icon" sizes="180x180" href="images/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="images/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="images/icons/favicon-16x16.png">
+    <link rel="mask-icon" href="images/icons/safari-pinned-tab.svg" color="#0e161d">
+    <link rel="icon" type="image/x-icon" href="images/icons/favicon.ico">
+
+    <style>
+
+        .workstation {
+            color: #b77dff;
+        }
+        .item {
+            color: #6c9eff;
+
+        }
+        .quantity {
+            color: #b1e6a2;
+        }
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-size: 18px;
+            margin: 0;
+            padding: 0;
+            background-color: #1e1e1e;
+            color: #eee;
+            font-family: 'Shantell Sans', sans-serif;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 80px auto;
+            background-color: #2a2a2a;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 15px;
+            background: linear-gradient(to bottom, #fff, #93b3ca);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .select2-container--default .select2-selection--single {
+            background-color: #1e1e1e;
+            height: 38px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #eee;
+            line-height: 36px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            top: 8px;
+        }
+
+        .select2-container--default.select2-container--focus .select2-selection--single {
+            border-color: #888;
+        }
+
+        .select2-container--default .select2-results__option {
+            background-color: #2a2a2a;
+            color: #eee;
+            padding: 6px 12px;
+        }
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #3a3a3a;
+        }
+
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            background-color: #1e1e1e;
+            border: 1px solid #555;
+            color: #eee;
+            border-radius: 4px;
+        }
+
+        .select2-container .select2-selection--single .select2-selection__clear {
+            color: white;
+            font-weight: normal;
+            font-size: 1.7em;
+        }
+
+        .select2-search--dropdown {
+            padding: 6px 12px;
+        }
+
+        .select2-dropdown {
+            background-color: #2a2a2a;
+            border: 1px solid #888;
+        }
+
+        #craftTree {
+            margin-top: 10px;
+        }
+
+        .jstree-default {
+            background-color: #2a2a2a;
+            color: #eee;
+        }
+
+        .jstree-default .jstree-node {
+            color: #eee;
+            background-color: #2a2a2a;
+        }
+
+        .jstree-default .jstree-node .jstree-icon {
+            background-color: transparent;
+        }
+
+        .jstree-default .jstree-anchor:hover {
+            background-color: #3a3a3a;
+        }
+
+        .jstree-default .jstree-icon.jstree-themeicon {
+            background-size: contain !important;
+        }
+
+
+        .jstree-default .jstree-hovered,
+        .jstree-clicked {
+            background-color: transparent !important; /* Отключаем выделение */
+        }
+        
+        .jstree-default .jstree-node, .jstree-default .jstree-icon {
+            background-image: url(images/jstree/32px.png);
+        }
+
+        .jstree-default .jstree-node {
+            background-position: -292px -4px;
+            background-repeat: repeat-y;
+        }
+
+        .jstree-default .jstree-last {
+            background: 0 0;
+        }
+
+        .custom-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 6px;
+            vertical-align: middle;
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+
+        /* Стили для списка ресурсов */
+        .resource-list {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #1e1e1e;
+            border-radius: 6px;
+        }
+
+        .resource-icon {
+            width: 24px;
+            vertical-align: middle;
+            margin-right: 2px;
+        }
+
+        .resource-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #444;
+        }
+
+        .resource-item:last-child {
+            border-bottom: none;
+        }
+
+        .resource-name {
+        }
+
+        .resource-quantity {
+            color: #aaa;
+        }
+
+        .rarity-0,.rarity-0 :hover {
+            color: #fff!important
+        }
+
+        .rarity-1,.rarity-1 :hover {
+            color: #10e000!important
+        }
+
+        .rarity-2,.rarity-2 :hover {
+            color: #008bff!important
+        }
+
+        .rarity-3,.rarity-3 :hover {
+            color: #ff00e9!important
+        }
+
+        .rarity-4,.rarity-4 :hover {
+            color: #ff8400!important
+        }
+
+        .rarity-99,.rarity-99 :hover {
+            color: #daa520!important
+        }
+
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .site-header {
+            position: fixed;
+            top: 0;
+            left: 50px;
+            z-index: 40;
+            height: 7rem;
+            pointer-events: none;
+        }
+
+        .header-logo {
+            position: absolute;
+            top: 0;
+            height: 8rem;
+            left: 2.5rem;
+            width: 6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-color: rgba(0, 0, 0, 1);
+            padding: 0.5rem;
+            clip-path: url(#logo-banner);
+            pointer-events: auto;
+        }
+
+        .header-logo img {
+            width: 3rem;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .header-menus {
+            display: flex;
+            position: relative;
+            padding: 1rem 4rem 1rem 11rem;
+            gap: 2.5rem;
+            align-items: center;
+            pointer-events: auto;
+        }
+
+        .header-menus::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            clip-path: url(#header-mask);
+            mask-image: linear-gradient(90deg, #000 90%, transparent);
+            z-index: -1;
+        }
+
+        .main-menu {
+            display: flex;
+            align-items: center;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        .main-menu li {
+            position: relative;
+        }
+
+        .main-menu li:not(:last-child)::after {
+            content: "";
+            position: absolute;
+            right: -1.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0.125rem;
+            height: 2rem;
+            background-color: rgba(255, 255, 255, 1);
+            mask-image: linear-gradient(180deg, transparent #000 transparent);
+            opacity: 0.3;
+        }
+
+        .menu-item {
+            text-decoration: none;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            font-family: Nocturne, serif;
+            position: relative;
+            z-index: 20;
+        }
+
+        .menu-item .link-text {
+            background: linear-gradient(to bottom, #fff, #93b3ca);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .menu-item:hover .link-text {
+            background: -webkit-linear-gradient(#c52543, #531621);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-container {
+            margin-top: 20px;
+        }
+
+        .svgs-container {
+            position: absolute;
+            width: 0;
+            height: 0;
+        }
+    </style>
+</head>
+<body>
+
+<svg class="svgs-container">
+    <clipPath id="header-mask" clipPathUnits="objectBoundingBox">
+        <path transform="scale(0.00074 0.0157)" d="M261.5 61.999h-19c-1 0-5.313.407-11.001.906l-35.537-.805-3.862-4.601-4.177 4.601h-29.368l-2.455-2.601-.985 2.601H11.721L0 26.999l6.261-27h51.025l-.186 2 3.275-2h192.833l.292 3.5s1.752-1.927 3.804-3.5h4.378l-.582 3.5 4.718-3.5h156.091l1.591 2.5 2.857-2.5H439.5l4 3 4.125-3h129.803l1.072 3 2.75-3h13.417l-.567 1.5 3.567-1.5H729.25l2.25 4.5.6-4.5h10.775l.625 1.5 1.875-1.5H948.2l-.1 4 13.4-3.5s2.625-.25 5.812-.5h25.007c.406.146.801.311 1.181.5 2.863 1.432 10 2.5 10 2.5s10-3 15-.5c0 0 4-.5 10.6-1 0 0 4.99-.908 8.42-1.5h78.73l2.25 3 3-3h235.22V62.1h-58.07c-3.34.606-6.55.399-6.55.399s-1.88.225-5.5-.399h-18.47c-1.85-.923-3.03-4.601-3.03-4.601l-1.85 4.601H1152.8c-20.94.624-38.56.399-40.3.399-5.4 0-27-.5-30-.5s-10.4-1.5-10.4-1.5l-8.68 1.601h-2.09l-1.83-4.601-6 4.5-66.4.101h-10.687c-1.978.809-3.886.655-6.313.399 0 0-4.413-2.656-7.6-.5l-145-1-19.4 1s-3.913-3.625-8-3.5l-8 2L678.937 62.1H605.75l-16.65-2.601s-5.131 2.219-11 .5c0 0-.288 1.156-5.6 1.5l-4.4-3-2.6 3.5s-2.135-.145-4.16.101h-83.007l-40.833.399-4-3-7 2.5s-15.4.5-17 0c-3.4-.5-26.4 0-26.4 0l-10.6-.5-7-3-4.4 3-18.85.601h-55.428c-3.907.698-6.721.52-7.322.399-3.4-.5-13-.399-13-.399v-4.101l-5 4Z"></path>
+    </clipPath>
+    <clipPath id="logo-banner" clipPathUnits="objectBoundingBox">
+        <path transform="scale(0.01 0.006)" d="m-.008 0 98.795.532c-4.556 12.375-7.452 25.865-9.256 39.071L85.74 33.64l3.135 11.173c-1.38 11.885-1.921 23.379-2.016 33.448l-3.719-.371 3.705 3.472c-.017 18.736 1.418 31.817 1.418 31.817-4.424 11.252-12.754 22.173-20.588 30.798l-.535-6.088-2.75 9.25-.706 1.093c-7.928 8.18-14.464 13.43-14.464 13.43-2.567-2.185-4.949-4.326-7.193-6.425l.863-4.098-2.639 2.419c-.817-.785-1.614-1.562-2.388-2.332l-.723-4.337-3.02.504c-8.299-8.774-13.729-16.395-17.211-22.186l.981-4.317-2.282 2.091c-3.388-6.016-4.412-9.535-4.412-9.535.546-11.562.244-23.792-.535-35.78l1.729-3.027-2.146-2.789c-.018-.227-.035-.454-.053-.68l1.549-1.781-1.792-1.178c-.938-10.943-2.207-21.463-3.529-30.83l2.321.758-2.734-3.633C3.048 14.207-.008 0-.008 0Z"></path>
+    </clipPath>
+</svg>
+
+<header class="site-header">
+    <div class="header-container">
+        <div class="header-menus">
+            <nav>
+                <ul class="main-menu">
+                    <li>
+                        <a href="/" rel="noopener noreferrer" class="menu-item">
+                            <span class="link-text">Bases Map</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a aria-current="page" href="/quality" class="menu-item">
+                            <span class="link-text">Quality calculator</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/craft" class="menu-item">
+                            <span class="link-text">Craft Calculator</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <a aria-current="page" href="/" class="header-logo">
+            <img width="80" height="50" src="images/icons/logo.png">
+        </a>
+    </div>
+</header>
+
+<div class="container">
+    <h1>Choose item to view crafting tree</h1>
+    <select id="itemSelector" style="width: 100%">
+        <option value="">-- Choose item --</option>
+    </select>
+    <div id="craftTree"></div>
+    <div id="resourceList" class="resource-list"></div>
+</div>
+
+<script>
+    let itemsData = {};
+    let isInitialized = false;
+
+    function initSelect2() {
+        $('#itemSelector').select2({
+            theme: 'default',
+            placeholder: "-- Choose item --",
+            allowClear: true,
+            width: '100%',
+            minimumInputLength: 0
+        });
+
+        $('#itemSelector').on('select2:open', function (e) {
+            const searchInput = $('.select2-search__field');
+            if (searchInput.length > 0) {
+                setTimeout(() => searchInput.focus(), 1000)
+            }
+        });
+
+        $('#itemSelector').on('select2:select', function (e) {
+            const selectedItem = e.params.data.id;
+            if (!selectedItem || !itemsData[selectedItem]) return;
+
+            const treeData = buildCraftTree(itemsData, selectedItem, 1, 0);
+            renderJsTree(treeData);
+
+            const resources = collectResources(itemsData, selectedItem, 1);
+            renderResourceList(resources);
+        });
+    }
+
+    fetch('recipes.json')
+        .then(res => res.json())
+        .then(data => {
+            itemsData = data;
+
+            const selector = document.getElementById('itemSelector');
+
+            Object.values(itemsData).forEach(data => {
+                const option = document.createElement('option');
+                option.value = data.id;
+                option.textContent = data.name;
+                selector.appendChild(option);
+            });
+
+            initSelect2();
+            isInitialized = true;
+        });
+
+    function buildCraftTree(data, itemName, quantity, level = 0) {
+        const item = data[itemName];
+        if (!item) return null;
+
+        const children = [];
+
+        if (item.inputs) {
+            for (const [inputName, inputQty] of Object.entries(item.inputs)) {
+                const childTree = buildCraftTree(data, inputName, inputQty * quantity, level + 1);
+                if (childTree) {
+                    children.push(childTree);
+                }
+            }
+        }
+
+        let title = `<span class="item rarity-${item.rarity}">${item.name}</span> <span class="quantity">x${quantity}</span>`;
+        if (item.workstations?.length) {
+            title += ` [<span class="workstation">${item.workstations.map(x => x.name).join(', ')}</span>]`;
+        }
+
+        return {
+            text: title,
+            state: { opened: level < 1 || item.rarity > 0 },
+            icon: item.local_image_path ? `./${item.local_image_path}` : false,
+            children: children.length ? children : undefined
+        };
+    }
+
+    function renderJsTree(treeData) {
+        const $tree = $('#craftTree');
+
+        if ($tree.data("jstree")) {
+            $tree.jstree("destroy");
+        }
+
+        $tree.empty();
+
+        if (!treeData) return;
+
+        $tree.jstree({
+            core: {
+                data: [treeData],
+                check_callback: true,
+                multiple: false
+            },
+            plugins: ["search", "state", "types"],
+            types: {
+                default: {
+                    select_node: false
+                }
+            }
+        });
+
+        $tree.on('ready.jstree', function () {
+            $tree.find('li').each(function () {
+                const node = $tree.jstree(true).get_node(this);
+                if (node && node.state.opened) {
+                    $tree.jstree(true).open_node(node);
+                } else {
+                    $tree.jstree(true).close_node(node);
+                }
+            });
+        });
+    }
+
+    function collectResources(data, itemName, quantity, resources = {}) {
+        const item = data[itemName];
+
+        if (!item) {
+            return resources;
+        }
+
+
+        if (!item.inputs || Object.keys(item.inputs).length === 0) {
+            resources[itemName] = (resources[itemName] || 0) + quantity;
+        } else {
+            for (const [inputName, inputQty] of Object.entries(item.inputs)) {
+                collectResources(data, inputName, inputQty * quantity, resources);
+            }
+        }
+
+        return resources;
+    }
+
+    function renderResourceList(resources) {
+        const list = $('#resourceList');
+        list.empty();
+
+        if ($.isEmptyObject(resources)) {
+            list.append('<p>Ресурсы не найдены</p>');
+            return;
+        }
+
+        const container = $('<div>').css({
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px'
+        });
+
+        const sortedResources = Object.entries(resources).sort(([a], [b]) =>
+            a.localeCompare(b)
+        );
+
+        sortedResources.forEach(([name, qty]) => {
+            const item = $('<div>').addClass('resource-item');
+            item.append($('<span>').addClass('resource-name').append($('<img>').addClass('resource-icon').attr('src', itemsData[name]?.local_image_path)).append(itemsData[name].name));
+            item.append($('<span>').addClass('resource-quantity').text(`x${qty}`));
+            container.append(item);
+        });
+
+        list.append($('<h4>').text('Base materials:').css({margin: '0 0 10px 0',}));
+        list.append(container);
+    }
+</script>
+
+</body>
+</html>

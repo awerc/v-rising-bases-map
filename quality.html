@@ -2,8 +2,13 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Симуляция улучшения качества</title>
+  <title>Stimulate quality improvement</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js "></script>
+  <link rel="apple-touch-icon" sizes="180x180" href="images/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="images/icons/favicon-16x16.png">
+  <link rel="mask-icon" href="images/icons/safari-pinned-tab.svg" color="#0e161d">
+  <link rel="icon" type="image/x-icon" href="images/icons/favicon.ico">
   <style>
     body {
       margin: 0;
@@ -34,6 +39,7 @@
     }
 
     .results-container {
+      margin-top: 70px;
       flex: 1;
       padding: 20px;
       overflow: auto;
@@ -63,6 +69,11 @@
       margin-top: 8px;
     }
 
+    .results-output {
+      font-family: monospace;
+      font-size: 16px;
+    }
+
     .simulation-params {
       margin-top: 15px;
       padding: 10px;
@@ -84,89 +95,254 @@
     canvas {
       max-width: 100%;
     }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    .site-header {
+      position: fixed;
+      top: 0;
+      left: 50px;
+      z-index: 40;
+      height: 7rem;
+      pointer-events: none;
+    }
+
+    .header-logo {
+      position: absolute;
+      top: 0;
+      height: 8rem;
+      left: 2.5rem;
+      width: 6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background-color: rgba(0, 0, 0, 1);
+      padding: 0.5rem;
+      clip-path: url(#logo-banner);
+      pointer-events: auto;
+    }
+
+    .header-logo img {
+      width: 3rem;
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    .header-menus {
+      display: flex;
+      position: relative;
+      padding: 1rem 4rem 1rem 11rem;
+      gap: 2.5rem;
+      align-items: center;
+      pointer-events: auto;
+    }
+
+    .header-menus::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.7);
+      clip-path: url(#header-mask);
+      mask-image: linear-gradient(90deg, #000 90%, transparent);
+      z-index: -1;
+    }
+
+    .main-menu {
+      display: flex;
+      align-items: center;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    .main-menu li {
+      position: relative;
+    }
+
+    .main-menu li:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      right: -1.25rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0.125rem;
+      height: 2rem;
+      background-color: #fff;
+      mask-image: linear-gradient(180deg, transparent #000 transparent);
+      opacity: 0.3;
+    }
+
+    .menu-item {
+      text-decoration: none;
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+      font-family: Nocturne, serif;
+      position: relative;
+      z-index: 20;
+    }
+
+    .menu-item .link-text {
+      background: linear-gradient(to bottom, #fff, #93b3ca);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .menu-item:hover .link-text {
+      background: -webkit-linear-gradient(#c52543, #531621);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-container {
+      margin-top: 20px;
+    }
+
+    .svgs-container {
+      position: absolute;
+      width: 0;
+      height: 0;
+    }
+
+    .divider.vertical {
+      width: 1px;
+      display: inline-block;
+      height: 1.2em;
+      background: #ccc;
+      margin: 0 2px;
+      vertical-align: middle;
+    }
   </style>
 </head>
 <body>
-<main>
 
+<svg class="svgs-container">
+  <clipPath id="header-mask" clipPathUnits="objectBoundingBox">
+    <path transform="scale(0.00074 0.0157)" d="M261.5 61.999h-19c-1 0-5.313.407-11.001.906l-35.537-.805-3.862-4.601-4.177 4.601h-29.368l-2.455-2.601-.985 2.601H11.721L0 26.999l6.261-27h51.025l-.186 2 3.275-2h192.833l.292 3.5s1.752-1.927 3.804-3.5h4.378l-.582 3.5 4.718-3.5h156.091l1.591 2.5 2.857-2.5H439.5l4 3 4.125-3h129.803l1.072 3 2.75-3h13.417l-.567 1.5 3.567-1.5H729.25l2.25 4.5.6-4.5h10.775l.625 1.5 1.875-1.5H948.2l-.1 4 13.4-3.5s2.625-.25 5.812-.5h25.007c.406.146.801.311 1.181.5 2.863 1.432 10 2.5 10 2.5s10-3 15-.5c0 0 4-.5 10.6-1 0 0 4.99-.908 8.42-1.5h78.73l2.25 3 3-3h235.22V62.1h-58.07c-3.34.606-6.55.399-6.55.399s-1.88.225-5.5-.399h-18.47c-1.85-.923-3.03-4.601-3.03-4.601l-1.85 4.601H1152.8c-20.94.624-38.56.399-40.3.399-5.4 0-27-.5-30-.5s-10.4-1.5-10.4-1.5l-8.68 1.601h-2.09l-1.83-4.601-6 4.5-66.4.101h-10.687c-1.978.809-3.886.655-6.313.399 0 0-4.413-2.656-7.6-.5l-145-1-19.4 1s-3.913-3.625-8-3.5l-8 2L678.937 62.1H605.75l-16.65-2.601s-5.131 2.219-11 .5c0 0-.288 1.156-5.6 1.5l-4.4-3-2.6 3.5s-2.135-.145-4.16.101h-83.007l-40.833.399-4-3-7 2.5s-15.4.5-17 0c-3.4-.5-26.4 0-26.4 0l-10.6-.5-7-3-4.4 3-18.85.601h-55.428c-3.907.698-6.721.52-7.322.399-3.4-.5-13-.399-13-.399v-4.101l-5 4Z"></path>
+  </clipPath>
+  <clipPath id="logo-banner" clipPathUnits="objectBoundingBox">
+    <path transform="scale(0.01 0.006)" d="m-.008 0 98.795.532c-4.556 12.375-7.452 25.865-9.256 39.071L85.74 33.64l3.135 11.173c-1.38 11.885-1.921 23.379-2.016 33.448l-3.719-.371 3.705 3.472c-.017 18.736 1.418 31.817 1.418 31.817-4.424 11.252-12.754 22.173-20.588 30.798l-.535-6.088-2.75 9.25-.706 1.093c-7.928 8.18-14.464 13.43-14.464 13.43-2.567-2.185-4.949-4.326-7.193-6.425l.863-4.098-2.639 2.419c-.817-.785-1.614-1.562-2.388-2.332l-.723-4.337-3.02.504c-8.299-8.774-13.729-16.395-17.211-22.186l.981-4.317-2.282 2.091c-3.388-6.016-4.412-9.535-4.412-9.535.546-11.562.244-23.792-.535-35.78l1.729-3.027-2.146-2.789c-.018-.227-.035-.454-.053-.68l1.549-1.781-1.792-1.178c-.938-10.943-2.207-21.463-3.529-30.83l2.321.758-2.734-3.633C3.048 14.207-.008 0-.008 0Z"></path>
+  </clipPath>
+</svg>
+
+<header class="site-header">
+  <div class="header-container">
+    <div class="header-menus">
+      <nav>
+        <ul class="main-menu">
+          <li>
+            <a href="/" rel="noopener noreferrer" class="menu-item">
+              <span class="link-text">Bases Map</span>
+            </a>
+          </li>
+          <li>
+            <a aria-current="page" href="/quality" class="menu-item">
+              <span class="link-text">Quality calculator</span>
+            </a>
+          </li>
+          <li>
+            <a href="/craft" class="menu-item">
+              <span class="link-text">Craft Calculator</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+    <a aria-current="page" href="/" class="header-logo">
+      <img width="80" height="50" src="images/icons/logo.png">
+    </a>
+  </div>
+</header>
+<main>
+  <div class="results-container">
+    <div id="simulation-results" class="results-output"></div>
+    <canvas id="attemptsChart" width="400" height="200"></canvas>
+  </div>
   <aside class="controls-panel">
-    <h2>Симуляция улучшения качества</h2>
+    <div class="form-group">
+      <h2>Stimulate quality improvement</h2>
+    </div>
 
     <!-- Основные параметры -->
     <div class="form-group">
-      <label class="form-label">Текущее качество (%):</label>
-      <input type="number" id="currentQualityInput" class="form-input" value="98" min="-100" max="100" step="0.1">
+      <label class="form-label">Current Quality (%):</label>
+      <input type="number" id="currentQualityInput" class="form-input" value="98" min="-100" max="100" step="1">
     </div>
 
     <div class="form-group">
-      <label class="form-label">Целевое качество (%):</label>
-      <input type="number" id="targetQualityInput" class="form-input" value="100" min="-100" max="100" step="0.1">
+      <label class="form-label">Target quality (%):</label>
+      <input type="number" id="targetQualityInput" class="form-input" value="100" min="-100" max="100" step="1">
     </div>
 
     <div class="form-group">
-      <label class="form-label">Количество симуляций:</label>
+      <label class="form-label">Number of simulations:</label>
       <input type="number" id="simulationCountInput" class="form-input" value="10000" min="100" max="10000" step="100">
     </div>
 
     <!-- Режимы симуляции -->
     <div class="form-group">
-      <label class="form-label">Режим:</label>
+      <label class="form-label">Mode:</label>
       <div class="mode-selector">
         <label>
-          <input type="radio" name="simulationMode" value="slime" checked> Жижа
+          <input type="radio" name="simulationMode" value="slime" checked> Irradiant Gruel
         </label>
         <label>
-          <input type="radio" name="simulationMode" value="fish"> Рыба
+          <input type="radio" name="simulationMode" value="fish"> Corrupted Fish
         </label>
       </div>
     </div>
 
     <!-- Параметры Жижи -->
     <div id="slimeParameters" class="simulation-params">
-      <p class="description">Увеличивает качество, но с шансом превращения в мутанта</p>
       <div class="form-group">
-        <label class="form-label">Мин. улучшение качества:</label>
-        <input type="number" id="slimeQualityMin" class="form-input" value="1" min="0" max="10" step="0.1">
+        <p class="description">Increases the blood quality, but has a chance to turn the prisoner into a raging mutant.</p>
       </div>
       <div class="form-group">
-        <label class="form-label">Макс. улучшение качества:</label>
-        <input type="number" id="slimeQualityMax" class="form-input" value="2" min="0" max="10" step="0.1">
+        <label class="form-label">Min. quality improvement:</label>
+        <input type="number" id="slimeQualityMin" class="form-input" value="1" min="0" max="10" step="1">
       </div>
       <div class="form-group">
-        <label class="form-label">Шанс мутации (%):</label>
+        <label class="form-label">Max. quality improvement:</label>
+        <input type="number" id="slimeQualityMax" class="form-input" value="2" min="0" max="10" step="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Chance of mutation (%):</label>
         <input type="number" id="mutateChanceInput" class="form-input" value="35" min="0" max="100" step="1">
       </div>
     </div>
 
     <!-- Параметры Рыбы -->
     <div id="fishParameters" class="simulation-params" style="display: none;">
-      <p class="description">Случайное изменение качества и HP</p>
       <div class="form-group">
-        <label class="form-label">Мин. изменение HP:</label>
+        <p class="description">Randomly increase or reduce health, misery, and blood quality.</p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Min. HP change:</label>
         <input type="number" id="hpMinInput" class="form-input" value="-100" min="-100" max="100" step="1">
       </div>
       <div class="form-group">
-        <label class="form-label">Макс. изменение HP:</label>
+        <label class="form-label">Max. HP change:</label>
         <input type="number" id="hpMaxInput" class="form-input" value="100" min="-100" max="100" step="1">
       </div>
       <div class="form-group">
-        <label class="form-label">Мин. изменение качества:</label>
+        <label class="form-label">Min. quality change:</label>
         <input type="number" id="qualityMinInput" class="form-input" value="-2" min="-100" max="100" step="1">
       </div>
       <div class="form-group">
-        <label class="form-label">Макс. изменение качества:</label>
+        <label class="form-label">Max. quality change:</label>
         <input type="number" id="qualityMaxInput" class="form-input" value="2" min="-100" max="100" step="1">
       </div>
     </div>
 
-    <button id="runButton">Запустить симуляцию</button>
+    <button id="runButton">Run the simulation</button>
   </aside>
-
-
-  <div class="results-container">
-    <div id="simulation-results" class="results-output"></div>
-    <canvas id="attemptsChart" width="400" height="200"></canvas>
-  </div>
 </main>
 
 <script>
@@ -194,7 +370,7 @@
 
     // Проверка целевого качества
     if (targetQuality <= currentQuality) {
-      alert('Целевое качество должно быть выше текущего!');
+      alert('The target quality must be higher than the current one.!');
       return;
     }
 
@@ -324,31 +500,34 @@
 
     // Базовая статистика
     const baseStats = document.createElement('div');
+    baseStats.style.display = 'flex';
+    baseStats.style.gap = '8px';
+    baseStats.style.alignItems = 'baseline';
+    baseStats.style.marginLeft = '200px';
     baseStats.innerHTML = `
-        <h3>Результаты симуляции</h3>
-        <p>Текущее качество: ${currentQuality}% → Целевое качество: ${targetQuality}%</p>
-        <p>Успешных симуляций: ${successCount} из ${totalSimulations} (${((successCount / totalSimulations) * 100).toFixed(1)}%)</p>
-        ${isSlimeMode ? `<p>Симуляций с превращением в мутанта: ${mutationSimulations} (${((mutationSimulations / totalSimulations) * 100).toFixed(1)}%)</p>` : ''}
+        <h4>Simulation Results: </h4>
+        <p>
+${currentQuality}% → ${targetQuality}% <span class="divider vertical"></span>
+✅ ${successCount}/${totalSimulations} (${((successCount / totalSimulations) * 100).toFixed(1)}%)
+${isSlimeMode ? ` <span class="divider vertical"></span> 🧬 ${mutationSimulations} (${((mutationSimulations / totalSimulations) * 100).toFixed(1)}%)` : ''}
+        </p>
       `;
     resultsDiv.appendChild(baseStats);
 
     if (stats) {
-      // Подробная статистика
       const detailStats = document.createElement('div');
+      detailStats.style.display = 'flex';
+      detailStats.style.gap = '8px';
+      detailStats.style.alignItems = 'baseline';
+      detailStats.style.marginLeft = '200px';
       detailStats.innerHTML = `
-          <h4>Статистика успешных попыток</h4>
-          <ul>
-            <li>Среднее количество попыток: ${stats.mean}</li>
-            <li>Стандартное отклонение: ±${stats.stdDev}</li>
-            <li>Минимальное количество попыток: ${stats.min}</li>
-            <li>Максимальное количество попыток: ${stats.max}</li>
-            <li>Медиана: ${stats.median}</li>
-          </ul>
+          <h4>Successfull Attempts: </h4>
+          <p>⚖️ Average: ${stats.mean}±${stats.stdDev} <span class="divider vertical"></span> 📏 Range: ${stats.min}–${stats.max} <span class="divider vertical"></span> 🧮 Median: ${stats.median}</p>
         `;
       resultsDiv.appendChild(detailStats);
     } else {
       const noSuccess = document.createElement('p');
-      noSuccess.textContent = 'Ни одна из симуляций не достигла цели. Попробуйте снизить целевое качество.';
+      noSuccess.textContent = 'None of the simulations achieved the goal. Try to lower the target quality.';
       resultsDiv.appendChild(noSuccess);
     }
   }
@@ -356,24 +535,28 @@
   function createAttemptsChart(data) {
     const ctx = document.getElementById('attemptsChart');
 
-    // Подсчет частот для бинов
     const min = Math.min(...data);
     const max = Math.max(...data);
     const bins = Math.min(20, max - min + 1);
     const binSize = (max - min) / bins;
-    const frequencies = Array(bins).fill(0);
+    let frequencies = Array(bins).fill(0);
 
     data.forEach(val => {
       const binIndex = Math.min(bins - 1, Math.floor((val - min) / binSize));
       frequencies[binIndex]++;
     });
 
-    // Создаем подписи для бинов
-    const labels = Array.from({length: bins}, (_, i) => {
+    let labels = Array.from({length: bins}, (_, i) => {
       const from = Math.ceil(min + i * binSize);
       const to = Math.floor(min + (i + 1) * binSize);
       return from !== to ? `${from}–${to}` : from;
     });
+    frequencies = frequencies.filter((x, i) => {
+      const res = x > data.length / 200;
+      if (!res) labels[i] = undefined;
+      return res;
+    })
+    labels = labels.filter(Boolean)
 
     if (window.attemptsChartInstance) {
       window.attemptsChartInstance.destroy();
@@ -384,7 +567,7 @@
       data: {
         labels: labels,
         datasets: [{
-          label: 'Частота количества попыток',
+          label: 'The frequency of attempts',
           data: frequencies,
           backgroundColor: 'rgba(54, 162, 235, 0.6)',
         }],
@@ -393,12 +576,12 @@
         responsive: true,
         scales: {
           x: {
-            title: { display: true, text: 'Количество попыток' },
+            title: { display: true, text: 'Attempts count' },
             ticks: { autoSkip: false },
           },
           y: {
             beginAtZero: true,
-            title: { display: true, text: 'Частота' },
+            title: { display: true, text: 'Frequency' },
           },
         },
         plugins: {
@@ -406,7 +589,7 @@
           tooltip: {
             callbacks: {
               label: function (context) {
-                return `${context.parsed.y} симуляций (${((context.parsed.y / context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0)) * 100).toFixed(1)}%)`;
+                return `${context.parsed.y} simulations (${((context.parsed.y / context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0)) * 100).toFixed(1)}%)`;
               },
             },
           },
