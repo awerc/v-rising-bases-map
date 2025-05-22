@@ -391,12 +391,21 @@
     let isInitialized = false;
 
     function initSelect2() {
+        function formatState (state) {
+            if (!state.id) { return state.text; }
+            return $(
+                `<span><img class="resource-icon" src="/${itemsData[state.element.value].local_image_path}" />${state.text}</span>`
+            );
+        };
+
         $('#itemSelector').select2({
             theme: 'default',
             placeholder: "-- Choose item --",
             allowClear: true,
             width: '100%',
-            minimumInputLength: 0
+            minimumInputLength: 0,
+            templateResult: formatState
+
         });
 
         $('#itemSelector').on('select2:open', function (e) {
@@ -453,7 +462,7 @@
 
         let title = `<span class="item rarity-${item.rarity}">${item.name}</span> <span class="quantity">x${quantity}</span>`;
         if (item.workstations?.length) {
-            title += ` [<span class="workstation">${item.workstations.map(x => x.name).join(', ')}</span>]`;
+            title += ` [<span class="workstation">${item.workstations.map(x => `<img class="resource-icon" src="/images/workstations/${x.name.replaceAll(' ', '')}.webp">${x.name}`).join(', ')}</span>]`;
         }
 
         return {
