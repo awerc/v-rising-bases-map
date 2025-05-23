@@ -1,956 +1,1003 @@
 <!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <title>V: RISING — Карта</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://fonts.googleapis.com/css2?family=Shantell+Sans:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="apple-touch-icon" sizes="180x180" href="images/icons/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="images/icons/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="images/icons/favicon-16x16.png">
-  <link rel="mask-icon" href="images/icons/safari-pinned-tab.svg" color="#0e161d">
-  <link rel="icon" type="image/x-icon" href="images/icons/favicon.ico">
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: #1e1e1e;
-      color: #eee;
-      font-family: 'Shantell Sans', sans-serif;
-    }
-    * {
-      box-sizing: border-box;
-    }
-    #map {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-    }
-    #markerList {
-      position: absolute;
-      right: 0;
-      top: 0;
-      bottom: 0;
-      width: 300px;
-      background: rgba(30, 30, 30, 0.95);
-      border-left: 2px solid #444;
-      overflow-y: auto;
-      padding: 10px;
-      box-shadow: -2px 0 5px rgba(0, 0, 0, 0.7);
-      z-index: 999;
-      font-size: 16px;
-    }
-    input, textarea {
-      background: #2a2a2a;
-      color: #fff;
-      border: 1px solid #555;
-      resize: none;
-      padding: 4px;
-    }
-    #playerNamesInput {
-      padding: 10px;
-      width: 100%;
-      height: 80px;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <title>V: RISING — Карта</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Shantell+Sans:wght@400;700&display=swap" rel="stylesheet" />
+    <link rel="apple-touch-icon" sizes="180x180" href="images/icons/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="images/icons/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="images/icons/favicon-16x16.png" />
+    <link rel="mask-icon" href="images/icons/safari-pinned-tab.svg" color="#0e161d" />
+    <link rel="icon" type="image/x-icon" href="images/icons/favicon.ico" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #1e1e1e;
+        color: #eee;
+        font-family: 'Shantell Sans', sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      #map {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+      #markerList {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 300px;
+        background: rgba(30, 30, 30, 0.95);
+        border-left: 2px solid #444;
+        overflow-y: auto;
+        padding: 10px;
+        box-shadow: -2px 0 5px rgba(0, 0, 0, 0.7);
+        z-index: 999;
+        font-size: 16px;
+      }
+      input,
+      textarea {
+        background: #2a2a2a;
+        color: #fff;
+        border: 1px solid #555;
+        resize: none;
+        padding: 4px;
+      }
+      #playerNamesInput {
+        padding: 10px;
+        width: 100%;
+        height: 80px;
+      }
 
-    .marker-title {
-      font-weight: bold;
-      color: #ffcccc;
-    }
-    .marker-level {
-      font-size: 14px;
-      color: #aaa;
-    }
-    .marker-players {
-      display: flex;
-      flex-direction: column;
-    }
-    .hours {
-      user-select: none;
-      font-family: monospace;
-      color: #ccc;
-    }
+      .marker-title {
+        font-weight: bold;
+        color: #ffcccc;
+      }
+      .marker-level {
+        font-size: 14px;
+        color: #aaa;
+      }
+      .marker-players {
+        display: flex;
+        flex-direction: column;
+      }
+      .hours {
+        user-select: none;
+        font-family: monospace;
+        color: #ccc;
+      }
 
-    #modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 300px;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.85);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-    }
-    #modal form {
-      background: #2a2a2a;
-      padding: 20px;
-      border-radius: 6px;
-      width: 300px;
-    }
-    #modal input,
-    #modal textarea,
-    #modal select {
-      width: 100%;
-      margin-bottom: 10px;
-      background: #1e1e1e;
-      color: white;
-      border: 1px solid #444;
-      padding: 5px;
-    }
+      #modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 300px;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.85);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
+      #modal form {
+        background: #2a2a2a;
+        padding: 20px;
+        border-radius: 6px;
+        width: 300px;
+      }
+      #modal input,
+      #modal textarea,
+      #modal select {
+        width: 100%;
+        margin-bottom: 10px;
+        background: #1e1e1e;
+        color: white;
+        border: 1px solid #444;
+        padding: 5px;
+      }
 
-    button {
-      color: white;
-      padding: 4px 8px;
-      cursor: pointer;
-      font-size: 18px;
-      background: #2a2a2a;
-      border: 1px solid #555;
+      button {
+        color: white;
+        padding: 4px 8px;
+        cursor: pointer;
+        font-size: 18px;
+        background: #2a2a2a;
+        border: 1px solid #555;
+      }
+      button:hover {
+        background: #393939;
+      }
 
-    }
-    button:hover {
-      background: #393939;
+      button.close-modal {
+        float: right;
+        background: #d35252;
+      }
 
-    }
+      #popup {
+        background: rgba(30, 30, 30, 0.95);
+        color: #fff;
+        padding: 10px;
+        border-radius: 6px;
+        font-family: 'Shantell Sans', cursive;
+      }
+      #popup strong {
+        color: #ffcccc;
+      }
+      #popup button {
+        pointer-events: all;
+        margin-top: 5px;
+        background: #d35252;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        font-size: 14px;
+        cursor: pointer;
+        margin-right: 5px;
+      }
+      #popup button:nth-of-type(2) {
+        background: #52d37b;
+      }
 
-    button.close-modal {
-      float: right;
-      background: #d35252;
+      .autocomplete-items {
+        position: absolute;
+        border: 1px solid #555;
+        border-top: none;
+        z-index: 9999;
+        background: rgba(30, 30, 30, 0.95);
+        max-height: 200px;
+        overflow-y: auto;
+        width: 260px;
+        font-family: sans-serif;
+        font-size: 14px;
+      }
+      .autocomplete-items div {
+        padding: 8px;
+        cursor: pointer;
+        border-bottom: 1px solid #555;
+      }
+      .autocomplete-items div:hover {
+        background-color: rgba(43, 43, 43, 0.95);
+      }
 
-    }
+      .marker-item {
+        padding: 5px 10px;
+        border-bottom: 1px solid #ddd;
+        cursor: pointer;
+      }
 
-    #popup {
-      background: rgba(30, 30, 30, 0.95);
-      color: #fff;
-      padding: 10px;
-      border-radius: 6px;
-      font-family: 'Shantell Sans', cursive;
-    }
-    #popup strong {
-      color: #ffcccc;
-    }
-    #popup button {
-      pointer-events: all;
-      margin-top: 5px;
-      background: #d35252;
-      color: white;
-      border: none;
-      padding: 4px 8px;
-      font-size: 14px;
-      cursor: pointer;
-      margin-right: 5px;
-    }
-    #popup button:nth-of-type(2) {
-      background: #52d37b;
-    }
+      .marker-item:hover {
+        background: rgba(238, 238, 238, 0.1);
+      }
 
-    .autocomplete-items {
-      position: absolute;
-      border: 1px solid #555;
-      border-top: none;
-      z-index: 9999;
-      background: rgba(30, 30, 30, 0.95);
-      max-height: 200px;
-      overflow-y: auto;
-      width: 260px;
-      font-family: sans-serif;
-      font-size: 14px;
-    }
-    .autocomplete-items div {
-      padding: 8px;
-      cursor: pointer;
-      border-bottom: 1px solid #555;
-    }
-    .autocomplete-items div:hover {
-      background-color: rgba(43, 43, 43, 0.95);
-    }
+      /* Базовые стили */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-    .marker-item {
-      padding: 5px 10px;
-      border-bottom: 1px solid #ddd;
-      cursor: pointer;
-    }
+      button,
+      input,
+      optgroup,
+      select,
+      textarea {
+        color: inherit;
+        font-family: inherit;
+        font-size: 100%;
+        font-weight: inherit;
+        line-height: inherit;
+      }
 
-    .marker-item:hover {
-      background: rgba(238, 238, 238, 0.1);
-    }
+      button,
+      select {
+        text-transform: none;
+      }
 
-    /* Базовые стили */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+      button,
+      input[type='button'],
+      input[type='reset'],
+      input[type='submit'] {
+        appearance: button;
+        background-image: none;
+      }
 
-    button, input, optgroup, select, textarea {
-      color: inherit;
-      font-family: inherit;
-      font-size: 100%;
-      font-weight: inherit;
-      line-height: inherit;
-    }
+      [role='button'],
+      button {
+        cursor: pointer;
+      }
 
-    button, select {
-      text-transform: none;
-    }
+      /* Навигационная панель */
+      .site-header {
+        position: fixed;
+        top: 0;
+        left: 50px;
+        z-index: 40;
+        height: 7rem;
+      }
 
-    button, input[type="button"], input[type="reset"], input[type="submit"] {
-      appearance: button;
-      background-image: none;
-    }
+      .header-logo {
+        position: absolute;
+        top: 0;
+        left: 1rem;
+        width: 3.5rem;
+        height: 5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background-color: rgba(0, 0, 0, 1);
+        padding: 0.5rem;
+        clip-path: url(#logo-banner);
+        pointer-events: none;
+      }
 
-    [role="button"], button {
-      cursor: pointer;
-    }
+      .header-logo {
+        height: 8rem;
+        left: 2.5rem;
+        width: 6rem;
+        pointer-events: auto;
+      }
 
-    /* Навигационная панель */
-    .site-header {
-      position: fixed;
-      top: 0;
-      left: 50px;
-      z-index: 40;
-      height: 7rem;
-    }
+      .header-logo img {
+        width: 3rem;
+        display: block;
+        max-width: 100%;
+        height: auto;
+      }
 
-    .header-logo {
-      position: absolute;
-      top: 0;
-      left: 1rem;
-      width: 3.5rem;
-      height: 5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      background-color: rgba(0, 0, 0, 1);
-      padding: 0.5rem;
-      clip-path: url(#logo-banner);
-      pointer-events: none;
-    }
-
-    .header-logo {
-      height: 8rem;
-      left: 2.5rem;
-      width: 6rem;
-      pointer-events: auto;
-    }
-
-    .header-logo img {
-      width: 3rem;
-      display: block;
-      max-width: 100%;
-      height: auto;
-    }
-
-    .header-menus {
-      display: none;
-      position: relative;
-      padding: 1rem 4rem 1rem 11rem;
-      gap: 2.5rem;
-      align-items: center;
-      pointer-events: auto;
-    }
+      .header-menus {
+        display: none;
+        position: relative;
+        padding: 1rem 4rem 1rem 11rem;
+        gap: 2.5rem;
+        align-items: center;
+        pointer-events: auto;
+      }
 
       .header-menus {
         display: flex;
       }
 
-    .header-menus::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background-color: rgba(0, 0, 0, 0.7);
-      clip-path: url(#header-mask);
-      mask-image: linear-gradient(90deg, #000 90%, transparent);
-      z-index: -1;
-    }
+      .header-menus::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.7);
+        clip-path: url(#header-mask);
+        mask-image: linear-gradient(90deg, #000 90%, transparent);
+        z-index: -1;
+      }
 
-    .main-menu {
-      display: flex;
-      align-items: center;
-      gap: 2.5rem;
-      list-style: none;
-    }
+      .main-menu {
+        display: flex;
+        align-items: center;
+        gap: 2.5rem;
+        list-style: none;
+      }
 
-    .main-menu li {
-      position: relative;
-    }
+      .main-menu li {
+        position: relative;
+      }
 
-    .main-menu li:not(:last-child)::after {
-      content: "";
-      position: absolute;
-      right: -1.25rem;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 0.125rem;
-      height: 2rem;
-      background-color: rgba(255, 255, 255, 1);
-      mask-image: linear-gradient(180deg, transparent #000 transparent);
-      opacity: 0.3;
-    }
+      .main-menu li:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        right: -1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0.125rem;
+        height: 2rem;
+        background-color: rgba(255, 255, 255, 1);
+        mask-image: linear-gradient(180deg, transparent #000 transparent);
+        opacity: 0.3;
+      }
 
-    /* Навигационные ссылки */
-    .menu-item {
-      text-decoration: none;
-      text-transform: uppercase;
-      font-weight: 600;
-      letter-spacing: 0.2em;
-      font-size: 0.875rem;
-      line-height: 1.25rem;
-      font-family: Nocturne, serif;
-      position: relative;
-      z-index: 20;
-    }
+      /* Навигационные ссылки */
+      .menu-item {
+        text-decoration: none;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.2em;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        font-family: Nocturne, serif;
+        position: relative;
+        z-index: 20;
+      }
 
-    .menu-item .link-text {
-      background: linear-gradient(to bottom, #fff, #93b3ca);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+      .menu-item .link-text {
+        background: linear-gradient(to bottom, #fff, #93b3ca);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
 
-    .menu-item:hover .link-text {
-      background: -webkit-linear-gradient(#c52543, #531621);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+      .menu-item:hover .link-text {
+        background: -webkit-linear-gradient(#c52543, #531621);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
 
-    /* Контейнер */
-    .header-container {
-      margin-top: 20px;
-    }
+      /* Контейнер */
+      .header-container {
+        margin-top: 20px;
+      }
 
-    .svgs-container {
-      position: absolute;
-      width: 0;
-      height: 0;
-    }
+      .svgs-container {
+        position: absolute;
+        width: 0;
+        height: 0;
+      }
 
-    .spacer {
-      height: 8px;
-    }
-  </style>
-</head>
-<body>
+      .spacer {
+        height: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <svg class="svgs-container">
+      <clipPath id="header-mask" clipPathUnits="objectBoundingBox">
+        <path
+          transform="scale(0.00074 0.0157)"
+          d="M261.5 61.999h-19c-1 0-5.313.407-11.001.906l-35.537-.805-3.862-4.601-4.177 4.601h-29.368l-2.455-2.601-.985 2.601H11.721L0 26.999l6.261-27h51.025l-.186 2 3.275-2h192.833l.292 3.5s1.752-1.927 3.804-3.5h4.378l-.582 3.5 4.718-3.5h156.091l1.591 2.5 2.857-2.5H439.5l4 3 4.125-3h129.803l1.072 3 2.75-3h13.417l-.567 1.5 3.567-1.5H729.25l2.25 4.5.6-4.5h10.775l.625 1.5 1.875-1.5H948.2l-.1 4 13.4-3.5s2.625-.25 5.812-.5h25.007c.406.146.801.311 1.181.5 2.863 1.432 10 2.5 10 2.5s10-3 15-.5c0 0 4-.5 10.6-1 0 0 4.99-.908 8.42-1.5h78.73l2.25 3 3-3h235.22V62.1h-58.07c-3.34.606-6.55.399-6.55.399s-1.88.225-5.5-.399h-18.47c-1.85-.923-3.03-4.601-3.03-4.601l-1.85 4.601H1152.8c-20.94.624-38.56.399-40.3.399-5.4 0-27-.5-30-.5s-10.4-1.5-10.4-1.5l-8.68 1.601h-2.09l-1.83-4.601-6 4.5-66.4.101h-10.687c-1.978.809-3.886.655-6.313.399 0 0-4.413-2.656-7.6-.5l-145-1-19.4 1s-3.913-3.625-8-3.5l-8 2L678.937 62.1H605.75l-16.65-2.601s-5.131 2.219-11 .5c0 0-.288 1.156-5.6 1.5l-4.4-3-2.6 3.5s-2.135-.145-4.16.101h-83.007l-40.833.399-4-3-7 2.5s-15.4.5-17 0c-3.4-.5-26.4 0-26.4 0l-10.6-.5-7-3-4.4 3-18.85.601h-55.428c-3.907.698-6.721.52-7.322.399-3.4-.5-13-.399-13-.399v-4.101l-5 4Z"
+        ></path>
+      </clipPath>
+      <clipPath id="logo-banner" clipPathUnits="objectBoundingBox">
+        <path
+          transform="scale(0.01 0.006)"
+          d="m-.008 0 98.795.532c-4.556 12.375-7.452 25.865-9.256 39.071L85.74 33.64l3.135 11.173c-1.38 11.885-1.921 23.379-2.016 33.448l-3.719-.371 3.705 3.472c-.017 18.736 1.418 31.817 1.418 31.817-4.424 11.252-12.754 22.173-20.588 30.798l-.535-6.088-2.75 9.25-.706 1.093c-7.928 8.18-14.464 13.43-14.464 13.43-2.567-2.185-4.949-4.326-7.193-6.425l.863-4.098-2.639 2.419c-.817-.785-1.614-1.562-2.388-2.332l-.723-4.337-3.02.504c-8.299-8.774-13.729-16.395-17.211-22.186l.981-4.317-2.282 2.091c-3.388-6.016-4.412-9.535-4.412-9.535.546-11.562.244-23.792-.535-35.78l1.729-3.027-2.146-2.789c-.018-.227-.035-.454-.053-.68l1.549-1.781-1.792-1.178c-.938-10.943-2.207-21.463-3.529-30.83l2.321.758-2.734-3.633C3.048 14.207-.008 0-.008 0Z"
+        ></path>
+      </clipPath>
+    </svg>
+    <header class="site-header">
+      <div class="header-container">
+        <div class="header-menus">
+          <nav>
+            <ul class="main-menu">
+              <li>
+                <a href="/" rel="noopener noreferrer" class="menu-item">
+                  <span class="link-text">Bases Map</span>
+                </a>
+              </li>
+              <li>
+                <a aria-current="page" href="/quality" class="menu-item">
+                  <span class="link-text">Quality calculator</span>
+                </a>
+              </li>
+              <li>
+                <a href="/craft" class="menu-item">
+                  <span class="link-text">Craft Calculator</span>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+        <a aria-current="page" href="/" class="header-logo">
+          <img width="80" height="50" src="images/icons/logo.png" />
+        </a>
+      </div>
+    </header>
 
-<svg class="svgs-container">
-  <clipPath id="header-mask" clipPathUnits="objectBoundingBox">
-    <path transform="scale(0.00074 0.0157)" d="M261.5 61.999h-19c-1 0-5.313.407-11.001.906l-35.537-.805-3.862-4.601-4.177 4.601h-29.368l-2.455-2.601-.985 2.601H11.721L0 26.999l6.261-27h51.025l-.186 2 3.275-2h192.833l.292 3.5s1.752-1.927 3.804-3.5h4.378l-.582 3.5 4.718-3.5h156.091l1.591 2.5 2.857-2.5H439.5l4 3 4.125-3h129.803l1.072 3 2.75-3h13.417l-.567 1.5 3.567-1.5H729.25l2.25 4.5.6-4.5h10.775l.625 1.5 1.875-1.5H948.2l-.1 4 13.4-3.5s2.625-.25 5.812-.5h25.007c.406.146.801.311 1.181.5 2.863 1.432 10 2.5 10 2.5s10-3 15-.5c0 0 4-.5 10.6-1 0 0 4.99-.908 8.42-1.5h78.73l2.25 3 3-3h235.22V62.1h-58.07c-3.34.606-6.55.399-6.55.399s-1.88.225-5.5-.399h-18.47c-1.85-.923-3.03-4.601-3.03-4.601l-1.85 4.601H1152.8c-20.94.624-38.56.399-40.3.399-5.4 0-27-.5-30-.5s-10.4-1.5-10.4-1.5l-8.68 1.601h-2.09l-1.83-4.601-6 4.5-66.4.101h-10.687c-1.978.809-3.886.655-6.313.399 0 0-4.413-2.656-7.6-.5l-145-1-19.4 1s-3.913-3.625-8-3.5l-8 2L678.937 62.1H605.75l-16.65-2.601s-5.131 2.219-11 .5c0 0-.288 1.156-5.6 1.5l-4.4-3-2.6 3.5s-2.135-.145-4.16.101h-83.007l-40.833.399-4-3-7 2.5s-15.4.5-17 0c-3.4-.5-26.4 0-26.4 0l-10.6-.5-7-3-4.4 3-18.85.601h-55.428c-3.907.698-6.721.52-7.322.399-3.4-.5-13-.399-13-.399v-4.101l-5 4Z"></path>
-  </clipPath>
-  <clipPath id="logo-banner" clipPathUnits="objectBoundingBox">
-    <path transform="scale(0.01 0.006)" d="m-.008 0 98.795.532c-4.556 12.375-7.452 25.865-9.256 39.071L85.74 33.64l3.135 11.173c-1.38 11.885-1.921 23.379-2.016 33.448l-3.719-.371 3.705 3.472c-.017 18.736 1.418 31.817 1.418 31.817-4.424 11.252-12.754 22.173-20.588 30.798l-.535-6.088-2.75 9.25-.706 1.093c-7.928 8.18-14.464 13.43-14.464 13.43-2.567-2.185-4.949-4.326-7.193-6.425l.863-4.098-2.639 2.419c-.817-.785-1.614-1.562-2.388-2.332l-.723-4.337-3.02.504c-8.299-8.774-13.729-16.395-17.211-22.186l.981-4.317-2.282 2.091c-3.388-6.016-4.412-9.535-4.412-9.535.546-11.562.244-23.792-.535-35.78l1.729-3.027-2.146-2.789c-.018-.227-.035-.454-.053-.68l1.549-1.781-1.792-1.178c-.938-10.943-2.207-21.463-3.529-30.83l2.321.758-2.734-3.633C3.048 14.207-.008 0-.008 0Z"></path>
-  </clipPath>
-</svg>
-<header class="site-header">
-  <div class="header-container">
-    <div class="header-menus">
-      <nav>
-        <ul class="main-menu">
-          <li>
-            <a href="/" rel="noopener noreferrer" class="menu-item">
-              <span class="link-text">Bases Map</span>
-            </a>
-          </li>
-          <li>
-            <a aria-current="page" href="/quality" class="menu-item">
-              <span class="link-text">Quality calculator</span>
-            </a>
-          </li>
-          <li>
-            <a href="/craft" class="menu-item">
-              <span class="link-text">Craft Calculator</span>
-            </a>
-          </li>
-        </ul>
-      </nav>
+    <div id="map"></div>
+    <aside id="markerList">
+      <div id="serverInfo"></div>
+      <div class="spacer"></div>
+
+      <div style="display: flex; gap: 4px; align-items: flex-end">
+        <label class="full-width">
+          <h3>Map ID:</h3>
+          <input type="text" id="mapIdInput" placeholder="MAP-..." />
+        </label>
+        <button id="shareMapBtn" title="Share link">🔗</button>
+        <button id="generateMapIdBtn" title="Generate new Map ID">🔁</button>
+      </div>
+
+      <div class="spacer"></div>
+      <label class="full-width">
+        <h3>Players list</h3>
+        <textarea
+          id="playerNamesInput"
+          oninput="autoCompletePlayers(this)"
+          placeholder="Player1, Player2..."
+        ></textarea>
+        <div id="autocomplete-list" class="autocomplete-items"></div>
+      </label>
+      <div class="spacer"></div>
+
+      <h3>Markers</h3>
+      <div id="markersContainer"></div>
+    </aside>
+    <div id="modal">
+      <form id="markerForm">
+        <button type="button" class="close-modal">&times;</button>
+        <h4>Add / Edit</h4>
+        <label
+          >Level:
+          <select name="level">
+            <option value="I">I</option>
+            <option value="II">II</option>
+            <option value="III">III</option>
+            <option value="IV">IV</option>
+            <option value="V">V</option>
+          </select>
+        </label>
+        <label
+          >Title:
+          <input type="text" name="title" />
+        </label>
+        <label
+          >Description:
+          <textarea name="description"></textarea>
+        </label>
+        <label
+          >Players:
+          <input type="text" id="modal-players-input" name="players" oninput="autoCompletePlayers(this)" />
+          <div id="autocomplete-modal-list" class="autocomplete-items"></div>
+        </label>
+        <button type="submit">Save</button>
+      </form>
     </div>
-    <a aria-current="page" href="/" class="header-logo">
-      <img width="80" height="50" src="images/icons/logo.png">
-    </a>
-  </div>
-</header>
+    <div id="popup" class="ol-popup">
+      <div class="popup-content"></div>
+      <a href="#" class="ol-popup-closer"></a>
+    </div>
 
-<div id="map"></div>
-<aside id="markerList">
-  <div style="display: flex;gap: 4px;align-items: flex-end">
-    <label class="full-width">
-      <h3>Map ID:</h3>
-      <input type="text" id="mapIdInput" placeholder="MAP-..." />
-    </label>
-    <button id="shareMapBtn" title="Share link">
-      🔗
-    </button>
-    <button id="generateMapIdBtn" title="Generate new Map ID">
-      🔁
-    </button>
-  </div>
+    <script src="https://cdn.jsdelivr.net/npm/ol@v10.5.0/dist/ol.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.5.0/ol.css" />
+    <script>
+      async function saveMarkersToRedis(mapId, markers) {
+        try {
+          const response = await fetch(`https://v-rising-tools.vercel.app/api/map/${mapId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(markers),
+          });
+          if (!response.ok) throw new Error('Ошибка сохранения');
+        } catch (error) {
+          console.error('Ошибка сохранения карты:', error);
+        }
+      }
 
-  <div class="spacer"></div>
-  <label class="full-width">
-    <h3>Players list</h3>
-    <textarea id="playerNamesInput" oninput="autoCompletePlayers(this)" placeholder="Player1, Player2..."></textarea>
-    <div id="autocomplete-list" class="autocomplete-items"></div>
-  </label>
-  <div class="spacer"></div>
+      async function loadMarkersFromRedis(mapId) {
+        try {
+          const response = await fetch(`https://v-rising-tools.vercel.app/api/map/${mapId}`);
+          if (!response.ok) throw new Error('Карта не найдена');
+          const markers = await response.json();
+          vectorSource.clear();
+          markers.forEach(m => addMarker(m));
+        } catch (error) {
+          console.error('Ошибка загрузки карты:', error);
+          vectorSource.clear();
+        }
+        overlay.setPosition(undefined);
+        await renderMarkerList();
+      }
 
-  <h3>Markers</h3>
-  <div id="markersContainer"></div>
-</aside>
-<div id="modal">
-  <form id="markerForm">
-    <button type="button" class="close-modal">&times;</button>
-    <h4>Add / Edit</h4>
-    <label>Level:
-      <select name="level">
-        <option value="I">I</option>
-        <option value="II">II</option>
-        <option value="III">III</option>
-        <option value="IV">IV</option>
-        <option value="V">V</option>
-      </select>
-    </label>
-    <label>Title:
-      <input type="text" name="title" />
-    </label>
-    <label>Description:
-      <textarea name="description"></textarea>
-    </label>
-    <label>Players:
-      <input type="text" id="modal-players-input" name="players" oninput="autoCompletePlayers(this)" />
-      <div id="autocomplete-modal-list" class="autocomplete-items"></div>
-    </label>
-    <button type="submit">Save</button>
-  </form>
-</div>
-<div id="popup" class="ol-popup">
-  <div class="popup-content"></div>
-  <a href="#" class="ol-popup-closer"></a>
-</div>
+      // Инициализация при загрузке страницы
+      // === Кодирование и извлечение server_id из map_id ===
+      function encodeMapId(serverId) {
+        const timestamp = Date.now();
+        const salt = Math.random().toString(36).substring(2, 6);
+        const data = `${serverId}|${timestamp}|${salt}`;
+        return 'MAP-' + btoa(data).replace(/\+/g, '-').replace(/\//g, '_').substring(0, 12); // Компактный формат
+      }
 
-<script src="https://cdn.jsdelivr.net/npm/ol@v10.5.0/dist/ol.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.5.0/ol.css">
-<script>
-  async function saveMarkersToRedis(mapId, markers) {
-    try {
-      const response = await fetch(`/api/map/${mapId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(markers)
+      function decodeMapId(encoded) {
+        try {
+          const base64 = encoded.replace(/^MAP-/, '').replace(/-/g, '+').replace(/_/g, '/');
+          const decoded = atob(base64);
+          const [serverId] = decoded.split('|');
+          return serverId || null;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      // === Работа с DOM ===
+      const mapIdInput = document.getElementById('mapIdInput');
+      const generateMapIdBtn = document.getElementById('generateMapIdBtn');
+      const shareMapBtn = document.getElementById('shareMapBtn');
+
+      shareMapBtn.addEventListener('click', () => {
+        const currentMapId = mapIdInput.value.trim();
+        if (!currentMapId) return;
+
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('map', currentMapId);
+        navigator.clipboard
+          .writeText(currentUrl.toString())
+          .then(() => alert('The link has been copied to the clipboard!'))
+          .catch(err => console.error('Copy error:', err));
       });
-      if (!response.ok) throw new Error("Ошибка сохранения");
-    } catch (error) {
-      console.error("Ошибка сохранения карты:", error);
-    }
-  }
 
-  async function loadMarkersFromRedis(mapId) {
-    try {
-      const response = await fetch(`/api/map/${mapId}`);
-      if (!response.ok) throw new Error("Карта не найдена");
-      const markers = await response.json();
-      vectorSource.clear();
-      markers.forEach(m => addMarker(m));
-    } catch (error) {
-      console.error("Ошибка загрузки карты:", error);
-      vectorSource.clear();
-    }
-    overlay.setPosition(undefined);
-    await renderMarkerList();
-  }
+      // === Инициализация ===
+      window.addEventListener('load', async () => {
+        const urlParams = getURLParams();
+        let mapId = urlParams.map || loadMapState().mapId || null;
 
-  // Инициализация при загрузке страницы
-  // === Кодирование и извлечение server_id из map_id ===
-  function encodeMapId(serverId) {
-    const timestamp = Date.now();
-    const salt = Math.random().toString(36).substring(2, 6);
-    const data = `${serverId}|${timestamp}|${salt}`;
-    return 'MAP-' + btoa(data)
-            .replace(/\+/g, '-')
-            .replace(/\//g, '_')
-            .substring(0, 12); // Компактный формат
-  }
+        if (mapId) {
+          mapIdInput.value = mapId;
+          const serverId = decodeMapId(mapId);
+          if (serverId) {
+            await loadPlayerList(serverId);
+          }
+          await loadMarkersFromRedis(mapId);
+        }
 
-  function decodeMapId(encoded) {
-    try {
-      const base64 = encoded.replace(/^MAP-/, '').replace(/-/g, '+').replace(/_/g, '/');
-      const decoded = atob(base64);
-      const [serverId] = decoded.split('|');
-      return serverId || null;
-    } catch (e) {
-      return null;
-    }
-  }
+        mapIdInput.addEventListener('input', async () => {
+          const newMapId = mapIdInput.value.trim();
+          const serverId = decodeMapId(newMapId);
+          updateURL(null, newMapId);
+          saveMapState(null, newMapId);
+          if (serverId) {
+            await loadPlayerList(serverId);
+          }
+          await loadMarkersFromRedis(newMapId);
+        });
 
-  // === Работа с DOM ===
-  const mapIdInput = document.getElementById('mapIdInput');
-  const generateMapIdBtn = document.getElementById('generateMapIdBtn');
-  const shareMapBtn = document.getElementById('shareMapBtn');
+        generateMapIdBtn.addEventListener('click', async () => {
+          const serverId = prompt('Enter the server ID (you can leave it blank):');
+          const newMapId = encodeMapId(serverId || '');
+          mapIdInput.value = newMapId;
+          updateURL(null, newMapId);
+          saveMapState(null, newMapId);
+          if (serverId) {
+            await loadPlayerList(serverId);
+          }
+          await loadMarkersFromRedis(newMapId);
+        });
+      });
 
-  shareMapBtn.addEventListener('click', () => {
-    const currentMapId = mapIdInput.value.trim();
-    if (!currentMapId) return;
-
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set("map", currentMapId);
-    navigator.clipboard.writeText(currentUrl.toString())
-            .then(() => alert('The link has been copied to the clipboard!'))
-            .catch(err => console.error('Copy error:', err));
-  });
-
-  // === Инициализация ===
-  window.addEventListener('load', async () => {
-    const urlParams = getURLParams();
-    let mapId = urlParams.map || loadMapState().mapId || null;
-
-    if (mapId) {
-      mapIdInput.value = mapId;
-      const serverId = decodeMapId(mapId);
-      if (serverId) {
-        await loadPlayerList(serverId)
+      // === Парсинг URL ===
+      function getURLParams() {
+        const params = new URLSearchParams(window.location.search);
+        return {
+          map: params.get('map') || null,
+        };
       }
-      await loadMarkersFromRedis(mapId);
-    }
 
-    mapIdInput.addEventListener('input', async () => {
-      const newMapId = mapIdInput.value.trim();
-      const serverId = decodeMapId(newMapId);
-      updateURL(null, newMapId);
-      saveMapState(null, newMapId);
-      if (serverId) {
-        await loadPlayerList(serverId)
+      // === Сохранение состояния ===
+      function saveMapState(_, mapId) {
+        localStorage.setItem('map_id', mapId);
       }
-      await loadMarkersFromRedis(newMapId);
-    });
 
-    generateMapIdBtn.addEventListener('click', async () => {
-      const serverId = prompt('Enter the server ID (you can leave it blank):');
-      const newMapId = encodeMapId(serverId || '');
-      mapIdInput.value = newMapId;
-      updateURL(null, newMapId);
-      saveMapState(null, newMapId);
-      if (serverId) {
-        await loadPlayerList(serverId)
+      function loadMapState() {
+        return {
+          mapId: localStorage.getItem('map_id') || null,
+        };
       }
-      await loadMarkersFromRedis(newMapId);
-    });
-  });
 
-  // === Парсинг URL ===
-  function getURLParams() {
-    const params = new URLSearchParams(window.location.search);
-    return {
-      map: params.get("map") || null
-    };
-  }
-
-  // === Сохранение состояния ===
-  function saveMapState(_, mapId) {
-    localStorage.setItem("map_id", mapId);
-  }
-
-  function loadMapState() {
-    return {
-      mapId: localStorage.getItem("map_id") || null
-    };
-  }
-
-  // === Обновление URL ===
-  function updateURL(_, mapId) {
-    const url = new URL(window.location.href);
-    if (mapId) url.searchParams.set("map", mapId);
-    else url.searchParams.delete("map");
-    window.history.replaceState({}, "", url);
-  }
-
-  async function saveMarkersToGist() {
-    const markers = getMarkersFromMap();
-    return saveMarkersToRedis(localStorage.getItem("map_id"), markers);
-  }
-
-  const API_ENDPOINT = 'https://api.battlemetrics.com'
-  const imageBounds = [0, 0, 6080, 6080];
-  const imageUrl = 'images/map/map.webp';
-  let currentMarker = null;
-  let currentCoordinates = null;
-  let activePlayers = [];
-  let allPlayers = [];
-  var vectorSource = new ol.source.Vector();
-
-  const size = 6080; // Размер вашей карты в пикселях
-  const extent = [0, 0, size, size];
-  const projection = new ol.proj.Projection({
-    code: 'PIXEL',
-    units: 'pixels',
-    extent: extent
-  });
-
-  const map = new ol.Map({
-    target: 'map',
-    layers: [
-      new ol.layer.Image({
-        source: new ol.source.ImageStatic({
-          url: imageUrl,
-          imageExtent: extent, // Укажите тот же extent, что и у проекции
-          projection: projection // Используйте пользовательскую проекцию
-        })
-      }),
-      new ol.layer.Vector({
-        source: vectorSource,
-        extent: extent, // Укажите тот же extent, что и у проекции
-        projection: projection // Используйте пользовательскую проекцию
-        // updateWhileInteracting: true
-      })
-    ],
-    view: new ol.View({
-      projection: projection, // Укажите пользовательскую проекцию
-      center: ol.extent.getCenter(extent), // Центр в пиксельных координатах
-      zoom: -3,
-      minZoom: -5,
-      maxZoom: 7,
-      extent: [-1000, -1000, 8060, 8060] // Ограничьте область карты
-    }),
-  });
-
-  const container = document.getElementById('popup');
-  const content = container.querySelector('.popup-content');
-  const overlay = new ol.Overlay({
-    element: container,
-    autoPan: true,
-    autoPanAnimation: { duration: 250 }
-  });
-  map.addOverlay(overlay);
-  overlay.setPosition(undefined);
-
-
-  function getIconStyle(level, matches = 0) {
-    return new ol.style.Style({
-      image: new ol.style.Icon({
-        src: ['V','IV','III','II','I'].includes(level?.toUpperCase())
-                ? `/images/map/${level.toUpperCase()}.svg`
-                : 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        opacity: 1 - matches * 0.2,
-        scale: 1,
-      })
-    });
-  }
-
-
-  function showModal(coordinates, markerData = null) {
-    currentCoordinates = coordinates; // [x, y]
-    currentMarker = markerData ? markerData.feature : null;
-
-    markerForm.level.value = markerData?.level || 'I';
-    markerForm.title.value = markerData?.title || '';
-    markerForm.description.value = markerData?.description || '';
-    document.getElementById('modal-players-input').value = markerData?.players?.join(', ') || '';
-    modal.style.display = 'flex';
-    setTimeout(() => map.updateSize(), 200);
-  }
-
-  markerForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const data = {
-      level: this.level.value,
-      title: this.title.value.trim(),
-      description: this.description.value.trim(),
-      players: parsePlayers(document.getElementById('modal-players-input').value).map(player =>
-              allPlayers.find(x => x.name.toLowerCase() === player.toLowerCase())?.name ?? player
-      ),
-      lat: currentCoordinates[1],
-      lng: currentCoordinates[0]
-    };
-    if (currentMarker) {
-      updateMarker(currentMarker, data);
-    } else {
-      addMarker(data);
-    }
-    modal.style.display = 'none';
-    applyPlayerFilter();
-    saveMarkersToGist();
-  });
-
-
-  document.querySelector('.close-modal').addEventListener('click', () => {
-    modal.style.display = 'none';
-    map.updateSize();
-  });
-
-
-  function parsePlayers(str) {
-    return str.split(/[,\n]/)
-            .map(p => p.trim())
-            .filter(Boolean);
-  }
-
-
-  function addMarker(data) {
-    if (typeof data.lat !== 'number' || typeof data.lng !== 'number') {
-      console.error("Некорректные координаты метки", data);
-      return;
-    }
-
-    // Проверьте, что координаты в пределах карты
-    if (data.lng < 0 || data.lng > size || data.lat < 0 || data.lat > size) {
-      console.error("Маркер за пределами карты", data);
-      return;
-    }
-
-    // Координаты в пиксельной проекции: [x, y]
-    const coordinates = [data.lng, data.lat];
-    const feature = new ol.Feature(new ol.geom.Point(coordinates));
-
-    feature.setStyle(getIconStyle(data.level));
-    feature.set('data', {
-      level: data.level,
-      title: data.title,
-      description: data.description,
-      players: data.players,
-      lat: data.lat,
-      lng: data.lng
-    });
-
-    vectorSource.addFeature(feature);
-    createPopup(feature);
-    return feature;
-  }
-  function updateMarker(feature, newData) {
-    const coordinates = feature.getGeometry().getCoordinates();
-    feature.setStyle(getIconStyle(newData.level));
-    feature.setProperties({
-      data: {
-        level: newData.level,
-        title: newData.title,
-        description: newData.description,
-        players: newData.players,
-        lat: coordinates[1],
-        lng: coordinates[0]
+      // === Обновление URL ===
+      function updateURL(_, mapId) {
+        const url = new URL(window.location.href);
+        if (mapId) url.searchParams.set('map', mapId);
+        else url.searchParams.delete('map');
+        window.history.replaceState({}, '', url);
       }
-    });
-    createPopup(feature, newData);
-    saveMarkersToGist();
-  }
 
+      async function saveMarkersToGist() {
+        const markers = getMarkersFromMap();
+        return saveMarkersToRedis(localStorage.getItem('map_id'), markers);
+      }
 
-  function createPopup(feature) {
-    const data = feature.get('data');
-    const coordinates = feature.getGeometry().getCoordinates();
-    const currentPosition = overlay.getPosition();
-    if (currentPosition && currentPosition[0] === coordinates[0] && currentPosition[1] === coordinates[1]) {
+      const API_ENDPOINT = 'https://api.battlemetrics.com';
+      const imageBounds = [0, 0, 6080, 6080];
+      const imageUrl = 'images/map/map.webp';
+      let currentMarker = null;
+      let currentCoordinates = null;
+      let activePlayers = [];
+      let serverInfo = {};
+      let allPlayers = [];
+      var vectorSource = new ol.source.Vector();
+
+      const size = 6080; // Размер вашей карты в пикселях
+      const extent = [0, 0, size, size];
+      const projection = new ol.proj.Projection({
+        code: 'PIXEL',
+        units: 'pixels',
+        extent: extent,
+      });
+
+      const map = new ol.Map({
+        target: 'map',
+        layers: [
+          new ol.layer.Image({
+            source: new ol.source.ImageStatic({
+              url: imageUrl,
+              imageExtent: extent, // Укажите тот же extent, что и у проекции
+              projection: projection, // Используйте пользовательскую проекцию
+            }),
+          }),
+          new ol.layer.Vector({
+            source: vectorSource,
+            extent: extent, // Укажите тот же extent, что и у проекции
+            projection: projection, // Используйте пользовательскую проекцию
+            // updateWhileInteracting: true
+          }),
+        ],
+        view: new ol.View({
+          projection: projection, // Укажите пользовательскую проекцию
+          center: ol.extent.getCenter(extent), // Центр в пиксельных координатах
+          zoom: -3,
+          minZoom: -5,
+          maxZoom: 7,
+          extent: [-1000, -1000, 8060, 8060], // Ограничьте область карты
+        }),
+      });
+
+      const container = document.getElementById('popup');
+      const content = container.querySelector('.popup-content');
+      const overlay = new ol.Overlay({
+        element: container,
+        autoPan: true,
+        autoPanAnimation: {duration: 250},
+      });
+      map.addOverlay(overlay);
       overlay.setPosition(undefined);
-      return
-    }
 
-    const popupContent = `
+      function getIconStyle(level, matches = 0) {
+        return new ol.style.Style({
+          image: new ol.style.Icon({
+            src: ['V', 'IV', 'III', 'II', 'I'].includes(level?.toUpperCase())
+              ? `/images/map/${level.toUpperCase()}.svg`
+              : 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            opacity: 1 - matches * 0.2,
+            scale: 1,
+          }),
+        });
+      }
+
+      function showModal(coordinates, markerData = null) {
+        currentCoordinates = coordinates; // [x, y]
+        currentMarker = markerData ? markerData.feature : null;
+
+        markerForm.level.value = markerData?.level || 'I';
+        markerForm.title.value = markerData?.title || '';
+        markerForm.description.value = markerData?.description || '';
+        document.getElementById('modal-players-input').value = markerData?.players?.join(', ') || '';
+        modal.style.display = 'flex';
+        setTimeout(() => map.updateSize(), 200);
+      }
+
+      markerForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const data = {
+          level: this.level.value,
+          title: this.title.value.trim(),
+          description: this.description.value.trim(),
+          players: parsePlayers(document.getElementById('modal-players-input').value).map(
+            player => allPlayers.find(x => x.name.toLowerCase() === player.toLowerCase())?.name ?? player,
+          ),
+          lat: currentCoordinates[1],
+          lng: currentCoordinates[0],
+        };
+        if (currentMarker) {
+          updateMarker(currentMarker, data);
+        } else {
+          addMarker(data);
+        }
+        modal.style.display = 'none';
+        applyPlayerFilter();
+        saveMarkersToGist();
+      });
+
+      document.querySelector('.close-modal').addEventListener('click', () => {
+        modal.style.display = 'none';
+        map.updateSize();
+      });
+
+      function parsePlayers(str) {
+        return str
+          .split(/[,\n]/)
+          .map(p => p.trim())
+          .filter(Boolean);
+      }
+
+      function addMarker(data) {
+        if (typeof data.lat !== 'number' || typeof data.lng !== 'number') {
+          console.error('Некорректные координаты метки', data);
+          return;
+        }
+
+        // Проверьте, что координаты в пределах карты
+        if (data.lng < 0 || data.lng > size || data.lat < 0 || data.lat > size) {
+          console.error('Маркер за пределами карты', data);
+          return;
+        }
+
+        // Координаты в пиксельной проекции: [x, y]
+        const coordinates = [data.lng, data.lat];
+        const feature = new ol.Feature(new ol.geom.Point(coordinates));
+
+        feature.setStyle(getIconStyle(data.level));
+        feature.set('data', {
+          level: data.level,
+          title: data.title,
+          description: data.description,
+          players: data.players,
+          lat: data.lat,
+          lng: data.lng,
+        });
+
+        vectorSource.addFeature(feature);
+        createPopup(feature);
+        return feature;
+      }
+      function updateMarker(feature, newData) {
+        const coordinates = feature.getGeometry().getCoordinates();
+        feature.setStyle(getIconStyle(newData.level));
+        feature.setProperties({
+          data: {
+            level: newData.level,
+            title: newData.title,
+            description: newData.description,
+            players: newData.players,
+            lat: coordinates[1],
+            lng: coordinates[0],
+          },
+        });
+        createPopup(feature, newData);
+        saveMarkersToGist();
+      }
+
+      function createPopup(feature) {
+        const data = feature.get('data');
+        const coordinates = feature.getGeometry().getCoordinates();
+        const currentPosition = overlay.getPosition();
+        if (currentPosition && currentPosition[0] === coordinates[0] && currentPosition[1] === coordinates[1]) {
+          overlay.setPosition(undefined);
+          return;
+        }
+
+        const popupContent = `
       <div><strong>${data.title}</strong></div>
       <div>${data.description}</div>
       <div class="marker-players">
-        ${data.players.map(p => {
-      const isMatch = activePlayers.includes(p.toLowerCase());
-      const player = allPlayers.find(x => x.name.toLowerCase() === p.toLowerCase());
-      const text = `<span class=${player?.online ? "online" : ""}>${p}</span>` + (player ? ` <span class="hours">${Number((player?.value/60/60).toFixed(2))}h</span>` : '');
-      return `<span class=${isMatch ? "matched" : ""}>${text}</span>`;
-    }).join('') || '-'}
+        ${
+          data.players
+            .map(p => {
+              const isMatch = activePlayers.includes(p.toLowerCase());
+              const player = allPlayers.find(x => x.name.toLowerCase() === p.toLowerCase());
+              const text =
+                `<span class=${player?.online ? 'online' : ''}>${p}</span>` +
+                (player ? ` <span class="hours">${Number((player?.value / 60 / 60).toFixed(2))}h</span>` : '');
+              return `<span class=${isMatch ? 'matched' : ''}>${text}</span>`;
+            })
+            .join('') || '-'
+        }
       </div>
       <button onclick="removeMarker(null, ${coordinates[0]}, ${coordinates[1]})">Delete</button>
       <button onclick="editMarker(${coordinates[0]}, ${coordinates[1]})">Edit</button>
     `;
 
-    content.innerHTML = popupContent;
-    overlay.setPosition(coordinates);
-  }
+        content.innerHTML = popupContent;
+        overlay.setPosition(coordinates);
+      }
 
-  map.on('click', function(evt) {
-    const feature = map.forEachFeatureAtPixel(evt.pixel, function(feature) {
-      return feature;
-    });
-
-    if (feature) {
-      createPopup(feature);
-    } else {
-      const coordinates = evt.coordinate; // [x, y] в пользовательской проекции
-      showModal(coordinates);
-      overlay.setPosition(undefined)
-    }
-  });
-
-  map.on('pointermove', function (evt) {
-    const feature = map.forEachFeatureAtPixel(evt.pixel, function (feature) {
-      return feature;
-    });
-
-    // Если наводим на маркер — курсор pointer
-    if (feature) {
-      map.getTargetElement().style.cursor = 'pointer';
-    } else {
-      // Иначе — стандартный курсор
-      map.getTargetElement().style.cursor = 'grab';
-    }
-  });
-
-
-  window.editMarker = function(lng, lat) {
-    const coordinates = [lng, lat];
-    vectorSource.getFeaturesAtCoordinate(coordinates).forEach(function(feature) {
-      const data = feature.get('data');
-      showModal(coordinates, {
-        feature: feature,
-        level: data.level,
-        title: data.title,
-        description: data.description,
-        players: data.players
-      });
-    });
-  };
-
-
-  window.removeMarker = function(btn, lng, lat) {
-    const coordinates = [lng, lat];
-    vectorSource.getFeaturesAtCoordinate(coordinates).forEach(function(feature) {
-      vectorSource.removeFeature(feature);
-    });
-    saveMarkersToGist();
-    const parent = btn?.closest('.marker-item');
-    if (parent) parent.remove();
-    overlay.setPosition(undefined);
-  };
-
-
-  function getMarkersFromMap() {
-    const markers = [];
-    vectorSource.forEachFeature(function(feature) {
-      const data = feature.get('data');
-      const geometry = feature.getGeometry();
-      const coords = geometry.getCoordinates(); // [x, y]
-
-      markers.push({
-        level: data.level,
-        title: data.title,
-        description: data.description,
-        players: data.players,
-        lat: coords[1],  // y
-        lng: coords[0]   // x
-      });
-    });
-    return markers;
-  }
-
-
-  function renderMarkerList() {
-    const markersContainer = document.getElementById('markersContainer');
-    markersContainer.innerHTML = '';
-    const markers = getMarkersFromMap();
-    markers
-        .slice()
-        .sort((a, b) => b.players.filter(p => allPlayers.find(x => x.name.toLowerCase() === p.toLowerCase())?.online).length - a.players.filter(p => allPlayers.find(x => x.name.toLowerCase() === p.toLowerCase())?.online).length)
-        .forEach(m => {
-      const div = document.createElement('div');
-      div.className = 'marker-item';
-      div.innerHTML = `
-        <div class="marker-level">[ ${m.level} ] <span class="marker-title">${m.title}</span></div>
-        <div class="marker-players">
-          ${m.players.map(p => {
-        const isMatch = activePlayers.includes(p.toLowerCase());
-        const player = allPlayers.find(x => x.name.toLowerCase() === p.toLowerCase());
-        const text = `<span class=${player?.online ? "online" : ""}>${p}</span>` + (player ? ` <span class="hours">${Number((player?.value/60/60).toFixed(2))}h</span>` : '');
-        return `<span class=${isMatch ? "matched" : ""}>${text}</span>`;
-      }).join('') || '-'}
-        </div>`;
-      div.onclick = () => {
-        // Переводим пиксельные координаты в центр карты
-        map.getView().animate({
-          center: [m.lng, m.lat], // [x, y]
-          zoom: 4
+      map.on('click', function (evt) {
+        const feature = map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+          return feature;
         });
 
-        // Открытие попапа
-        const features = vectorSource.getFeaturesAtCoordinate([m.lng, m.lat]);
-        if (features.length > 0) {
-          const feature = features[0];
+        if (feature) {
           createPopup(feature);
+        } else {
+          const coordinates = evt.coordinate; // [x, y] в пользовательской проекции
+          showModal(coordinates);
+          overlay.setPosition(undefined);
         }
+      });
+
+      map.on('pointermove', function (evt) {
+        const feature = map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+          return feature;
+        });
+
+        // Если наводим на маркер — курсор pointer
+        if (feature) {
+          map.getTargetElement().style.cursor = 'pointer';
+        } else {
+          // Иначе — стандартный курсор
+          map.getTargetElement().style.cursor = 'grab';
+        }
+      });
+
+      window.editMarker = function (lng, lat) {
+        const coordinates = [lng, lat];
+        vectorSource.getFeaturesAtCoordinate(coordinates).forEach(function (feature) {
+          const data = feature.get('data');
+          showModal(coordinates, {
+            feature: feature,
+            level: data.level,
+            title: data.title,
+            description: data.description,
+            players: data.players,
+          });
+        });
       };
-      markersContainer.appendChild(div);
-    });
-  }
 
+      window.removeMarker = function (btn, lng, lat) {
+        const coordinates = [lng, lat];
+        vectorSource.getFeaturesAtCoordinate(coordinates).forEach(function (feature) {
+          vectorSource.removeFeature(feature);
+        });
+        saveMarkersToGist();
+        const parent = btn?.closest('.marker-item');
+        if (parent) parent.remove();
+        overlay.setPosition(undefined);
+      };
 
-  function applyPlayerFilter() {
-    activePlayers = parsePlayers(document.getElementById('playerNamesInput').value).map(x => x.toLowerCase());
-    vectorSource.forEachFeature(function(feature) {
-      const data = feature.get('data');
-      const matches = data.players.filter(p => activePlayers.includes(p.toLowerCase()));
-      feature.setStyle(getIconStyle(data.level, matches.length));
-    });
-    renderMarkerList();
-  }
+      function getMarkersFromMap() {
+        const markers = [];
+        vectorSource.forEachFeature(function (feature) {
+          const data = feature.get('data');
+          const geometry = feature.getGeometry();
+          const coords = geometry.getCoordinates(); // [x, y]
 
+          markers.push({
+            level: data.level,
+            title: data.title,
+            description: data.description,
+            players: data.players,
+            lat: coords[1], // y
+            lng: coords[0], // x
+          });
+        });
+        return markers;
+      }
 
-  async function loadPlayerList(server) {
-    try {
-      const end = new Date();
-      end.setUTCHours(0,0,0,0);
-      const start = new Date(end);
-      start.setUTCMonth(start.getUTCMonth() - 1);
-      const period = `${start.toISOString()}:${end.toISOString()}`
-      const online = await fetch(`${API_ENDPOINT}/servers/${server}?include=session&fields[session]=start,stop,name`).then(x => x.json()).then(response => response.included.filter(x => x.type ==='session' && !x.attributes.stop).map(x => x.attributes.name));
-      allPlayers = (await Promise.all([
-        fetch(`${API_ENDPOINT}/servers/${server}/relationships/leaderboards/time?page[size]=100&page[offset]=0&page[rel]=prev&filter[period]=${period}`).then(r => r.json().then(j => j.data.map(p => p.attributes))),
-        fetch(`${API_ENDPOINT}/servers/${server}/relationships/leaderboards/time?page[size]=100&page[offset]=100&page[rel]=prev&filter[period]=${period}`).then(r => r.json().then(j => j.data.map(p => p.attributes))),
-        fetch(`${API_ENDPOINT}/servers/${server}/relationships/leaderboards/time?page[size]=100&page[offset]=200&page[rel]=prev&filter[period]=${period}`).then(r => r.json().then(j => j.data.map(p => p.attributes)))
-      ])).flat().map(x => ({...x, online: online.includes(x.name)}));
-    } catch (e) {
-      console.error('Ошибка загрузки списка игроков', e);
-    }
-  }
+      function renderMarkerList() {
+        const markersContainer = document.getElementById('markersContainer');
+        markersContainer.innerHTML = '';
+        const markers = getMarkersFromMap();
+        markers
+          .slice()
+          .sort(
+            (a, b) =>
+              b.players.filter(p => allPlayers.find(x => x.name.toLowerCase() === p.toLowerCase())?.online).length -
+              a.players.filter(p => allPlayers.find(x => x.name.toLowerCase() === p.toLowerCase())?.online).length,
+          )
+          .forEach(m => {
+            const div = document.createElement('div');
+            div.className = 'marker-item';
+            div.innerHTML = `
+        <div class="marker-level">[ ${m.level} ] <span class="marker-title">${m.title}</span></div>
+        <div class="marker-players">
+          ${
+            m.players
+              .map(p => {
+                const isMatch = activePlayers.includes(p.toLowerCase());
+                const player = allPlayers.find(x => x.name.toLowerCase() === p.toLowerCase());
+                const text =
+                  `<span class=${player?.online ? 'online' : ''}>${p}</span>` +
+                  (player ? ` <span class="hours">${Number((player?.value / 60 / 60).toFixed(2))}h</span>` : '');
+                return `<span class=${isMatch ? 'matched' : ''}>${text}</span>`;
+              })
+              .join('') || '-'
+          }
+        </div>`;
+            div.onclick = () => {
+              // Переводим пиксельные координаты в центр карты
+              map.getView().animate({
+                center: [m.lng, m.lat], // [x, y]
+                zoom: 4,
+              });
 
+              // Открытие попапа
+              const features = vectorSource.getFeaturesAtCoordinate([m.lng, m.lat]);
+              if (features.length > 0) {
+                const feature = features[0];
+                createPopup(feature);
+              }
+            };
+            markersContainer.appendChild(div);
+          });
+      }
 
-  function autoCompletePlayers(inputElement) {
-    const val = inputElement.value.trim();
-    const container = inputElement.nextElementSibling;
-    container.innerHTML = "";
-    if (!val) {
-      applyPlayerFilter();
-      return;
-    }
-    const currentList = val.split(',').map(s => s.trim());
-    const last = currentList.pop().toLowerCase();
-    const matches = allPlayers.filter(p =>
+      function applyPlayerFilter() {
+        activePlayers = parsePlayers(document.getElementById('playerNamesInput').value).map(x => x.toLowerCase());
+        vectorSource.forEachFeature(function (feature) {
+          const data = feature.get('data');
+          const matches = data.players.filter(p => activePlayers.includes(p.toLowerCase()));
+          feature.setStyle(getIconStyle(data.level, matches.length));
+        });
+        renderMarkerList();
+      }
+
+      async function loadPlayerList(server) {
+        try {
+          const end = new Date();
+          end.setUTCHours(0, 0, 0, 0);
+          const start = new Date(end);
+          start.setUTCMonth(start.getUTCMonth() - 1);
+          const period = `${start.toISOString()}:${end.toISOString()}`;
+          serverInfo = await fetch(`${API_ENDPOINT}/servers/${server}?include=session&fields[session]=start,stop,name`)
+            .then(x => x.json())
+            .then(response => ({
+              name: response.data.attributes.name,
+              players: response.data.attributes.players,
+              maxPlayers: response.data.attributes.maxPlayers,
+              rank: response.data.attributes.rank,
+              status: response.data.attributes.status,
+              online: response.included
+                .filter(x => x.type === 'session' && !x.attributes.stop)
+                .map(x => x.attributes.name),
+            }));
+
+          allPlayers = (
+            await Promise.all([
+              fetch(
+                `${API_ENDPOINT}/servers/${server}/relationships/leaderboards/time?page[size]=100&page[offset]=0&page[rel]=prev&filter[period]=${period}`,
+              ).then(r => r.json().then(j => j.data.map(p => p.attributes))),
+              fetch(
+                `${API_ENDPOINT}/servers/${server}/relationships/leaderboards/time?page[size]=100&page[offset]=100&page[rel]=prev&filter[period]=${period}`,
+              ).then(r => r.json().then(j => j.data.map(p => p.attributes))),
+              fetch(
+                `${API_ENDPOINT}/servers/${server}/relationships/leaderboards/time?page[size]=100&page[offset]=200&page[rel]=prev&filter[period]=${period}`,
+              ).then(r => r.json().then(j => j.data.map(p => p.attributes))),
+            ])
+          )
+            .flat()
+            .map(x => ({...x, online: serverInfo.online.includes(x.name)}));
+
+          document.getElementById('serverInfo').innerHTML =
+            `${serverInfo.name} <br/> ${{online: '🟢', offline: '🔴'}[serverInfo.status]} ${serverInfo.status} ${serverInfo.players}/${serverInfo.maxPlayers} 🏆${serverInfo.rank}`;
+        } catch (e) {
+          console.error('Ошибка загрузки списка игроков', e);
+        }
+      }
+
+      function autoCompletePlayers(inputElement) {
+        const val = inputElement.value.trim();
+        const container = inputElement.nextElementSibling;
+        container.innerHTML = '';
+        if (!val) {
+          applyPlayerFilter();
+          return;
+        }
+        const currentList = val.split(',').map(s => s.trim());
+        const last = currentList.pop().toLowerCase();
+        const matches = allPlayers.filter(
+          p =>
             p.name.toLowerCase().startsWith(last) &&
-            !currentList.map(x => x.toLowerCase()).includes(p.name.toLowerCase())
-    );
-    matches.forEach(match => {
-      const item = document.createElement("div");
-      item.textContent = match.name;
-      item.onclick = () => {
-        const newValue = [...currentList, match.name].join(", ");
-        inputElement.value = newValue + ", ";
-        inputElement.focus();
-        container.innerHTML = "";
+            !currentList.map(x => x.toLowerCase()).includes(p.name.toLowerCase()),
+        );
+        matches.forEach(match => {
+          const item = document.createElement('div');
+          item.textContent = match.name;
+          item.onclick = () => {
+            const newValue = [...currentList, match.name].join(', ');
+            inputElement.value = newValue + ', ';
+            inputElement.focus();
+            container.innerHTML = '';
+            applyPlayerFilter();
+          };
+          container.appendChild(item);
+        });
         applyPlayerFilter();
-      };
-      container.appendChild(item);
-    });
-    applyPlayerFilter()
-  }
+      }
 
+      document.addEventListener('click', function (e) {
+        const list = document.getElementById('autocomplete-list');
+        const modalList = document.getElementById('autocomplete-modal-list');
+        if (!e.target.closest('#playerNamesInput')) list.innerHTML = '';
+        if (!e.target.closest('#modal-players-input')) modalList.innerHTML = '';
+      });
 
-  document.addEventListener("click", function(e) {
-    const list = document.getElementById("autocomplete-list");
-    const modalList = document.getElementById("autocomplete-modal-list");
-    if (!e.target.closest('#playerNamesInput')) list.innerHTML = "";
-    if (!e.target.closest('#modal-players-input')) modalList.innerHTML = "";
-  });
-
-  document.addEventListener('keydown', event => {
-    if (event.key === "Escape") {
-      modal.style.display = 'none';
-      overlay.setPosition(undefined);
-    }
-  });
-</script>
-</body>
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+          modal.style.display = 'none';
+          overlay.setPosition(undefined);
+        }
+      });
+    </script>
+  </body>
 </html>
